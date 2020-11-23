@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-# Usage: ./cb.py --cc=cc.csv
 import json
 import requests
 import csv
