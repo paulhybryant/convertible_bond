@@ -138,7 +138,8 @@ def process(dat):
             lst_data[id].append('清仓')
             candidates[id] = lst_data[id]
 
-    return candidates.values()
+    # 返回时按操作排序
+    return sorted(candidates.values(), key=lambda candidate: candidate[8])
 
 
 # 输出转债标的到csv
