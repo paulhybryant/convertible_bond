@@ -22,7 +22,8 @@ def get_cc():
     with open(FLAGS.cc, 'r', encoding='utf-8') as cc_file:
         cc_reader = csv.DictReader(cc_file, delimiter=',')
         for row in cc_reader:
-            cc_dict[row['代 码']] = row
+            if row['操作'] in ['建仓', '持仓']:
+                cc_dict[row['代 码']] = row
     return cc_dict
 
 
