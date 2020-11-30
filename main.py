@@ -14,6 +14,8 @@ flags.DEFINE_bool('debug', False, 'Debug mode')
 flags.DEFINE_string('save_json', None,
                     'Whether to save the json data to file.')
 flags.DEFINE_string('cc', None, '持仓信息csv文件，格式和产生的标的文件一样.')
+flags.DEFINE_string('blacklist', None, '黑名单文件，格式和产生的标的文件一样.')
+flags.DEFINE_integer('top', 20, 'Number of candidates')
 
 
 # 获取持仓
@@ -39,16 +41,16 @@ def get_dat(t):
     else:
         # 排除未上市的
         payload = {'listed': 'Y'}
-        newUrl = "https://www.jisilu.cn/data/cbnew/cb_list/?___jsl=LST___t=%s" % int(
+        newUrl = 'https://www.jisilu.cn/data/cbnew/cb_list/?___jsl=LST___t=%s' % int(
             t * 1000)
         logging.info(newUrl)
         # 最简单的爬虫请求.也可以加上headers字段，防止部分网址的反爬虫机制
         #  headers = {
-        #  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+        #  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36',
         #  }
         response = requests.post(newUrl, data=payload)
         # 当爬取的界面需要用户名密码登录时候，构建的请求需要包含auth字段
-        data = response.content.decode("utf-8")
+        data = response.content.decode('utf-8')
         if FLAGS.save_json:
             jf = open(FLAGS.save_json, 'w', encoding='utf-8')
             jf.write(data)
@@ -58,14 +60,24 @@ def get_dat(t):
 
 # 生成转债标的
 def process(dat):
+    blacklist = []
+    if FLAGS.blacklist:
+        with open(FLAGS.blacklist, 'r', encoding='utf-8') as bl:
+            bl_reader = csv.DictReader(bl, delimiter=',')
+            for row in bl_reader:
+                blacklist.append(row['代 码'])
     # 所有数据
     lst_data = {}
     for one in dat['rows']:
         # 每一条数据
         lst_dat = []
         # 转债id
-        id = one["id"]
-        dat_cell = one["cell"]
+        id = one['id']
+
+        if id in blacklist:
+            continue
+
+        dat_cell = one['cell']
         # 是否公布强制赎回
         is_shui = dat_cell['force_redeem']
         # 市净率
@@ -99,12 +111,12 @@ def process(dat):
         # 获取赎回价
         #  xiangqing_url = 'https://www.jisilu.cn/data/convert_bond_detail/' + id
         #  xiangqing_response = requests.get(xiangqing_url)
-        #  html = xiangqing_response.content.decode("utf-8")
+        #  html = xiangqing_response.content.decode('utf-8')
         #  html = etree.HTML(html)
-        #  lixi = html.xpath('.//td[@id="cpn_desc"]/text()')
+        #  lixi = html.xpath('.//td[@id='cpn_desc']/text()')
         #  pattern = re.compile(r'\d+\.\d+?')  # 查找数字
         #  lixi = pattern.findall(lixi[0])
-        #  shuhuijia = html.xpath('.//td[@id="redeem_price"]/text()')
+        #  shuhuijia = html.xpath('.//td[@id='redeem_price']/text()')
         #  li_price = 0
         #  for li in lixi:
         #  li_price = li_price + float(li)
@@ -126,7 +138,7 @@ def process(dat):
     # 按双低排序
     candidates = {}
     cc_dict = get_cc()
-    for c in sorted(lst_data.values(), key=lambda dat: dat[7])[0:20]:
+    for c in sorted(lst_data.values(), key=lambda dat: dat[7])[0:FLAGS.top]:
         if c[0] not in cc_dict:
             c.append('建仓')
         else:
@@ -147,8 +159,8 @@ def write_csv(data, t):
     f = open('cb%s.csv' % strftime('%Y%m%d', gmtime(t)),
              'w', encoding='utf-8')
     csv_writer = csv.writer(f)
-    csv_writer.writerow(["代 码", "转债名称", "现 价", "溢价率", "市净率", "评级",
-                         "剩余年限", "双低", "操作"])
+    csv_writer.writerow(['代 码', '转债名称', '现 价', '溢价率', '市净率', '评级',
+                         '剩余年限', '双低', '操作'])
     for dat in data:
         csv_writer.writerow(dat)
     f.close()
