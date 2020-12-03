@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+# Dependencies: requests, absl-py, lxml
 import json
 import requests
 import csv
@@ -58,6 +59,20 @@ def get_dat(t):
         return json.loads(data)
 
 
+def filter_reason(force_redeem, pb, btype, qflag, year_left):
+    if force_redeem:
+        return '公布强赎'
+    if float(pb) < 1.0:
+        return '破净'
+    if btype != 'C':
+        return '非可转债'
+    if qflag == 'Q':
+        return '机构可买'
+    if float(year_left) < 1:
+        return '剩余年限短：%s' % year_left
+    return 'Bug'
+
+
 # 生成转债标的
 def process(dat):
     blacklist = []
@@ -79,20 +94,23 @@ def process(dat):
 
         dat_cell = one['cell']
         # 是否公布强制赎回
-        is_shui = dat_cell['force_redeem']
+        force_redeem = dat_cell['force_redeem']
         # 市净率
         pb = dat_cell['pb']
         # 仅机构可买
         qflag = dat_cell['qflag']
         # 债券类型，'C'为可转债，‘E'为可交换债
         btype = dat_cell['btype']
-
-        # 排除已经公布强赎，破净的，仅机构可买的，可交换债
-        if is_shui != None or float(pb) < 1.0 or btype != 'C' or qflag == 'Q':
-            continue
-
+        # 剩余时间
+        year_left = dat_cell['year_left']
         # 转债名称
         name = dat_cell['bond_nm']
+
+        # 排除已经公布强赎，破净的，仅机构可买的，可交换债
+        if force_redeem or float(pb) < 1.0 or btype != 'C' or qflag == 'Q' or float(year_left) < 1:
+            #  logging.warning('过滤 %s %s: %s' % (id, name, filter_reason(force_redeem, pb, btype, qflag, year_left)))
+            continue
+
         # 现价
         price = dat_cell['price']
         # 溢价率
@@ -103,10 +121,8 @@ def process(dat):
         #  put_convert_price = dat_cell['put_convert_price']
         # 强赎触发价
         #  force_redeem_price = dat_cell['force_redeem_price']
-        # 剩余时间
-        last_time = dat_cell['year_left']
         # 双低
-        dblow = dat_cell['dblow']
+        double_low = dat_cell['dblow']
 
         # 获取赎回价
         #  xiangqing_url = 'https://www.jisilu.cn/data/convert_bond_detail/' + id
@@ -131,8 +147,8 @@ def process(dat):
         lst_dat.append(premium_rt)
         lst_dat.append(pb)
         lst_dat.append(rating_cd)
-        lst_dat.append(last_time)
-        lst_dat.append(dblow)
+        lst_dat.append(year_left)
+        lst_dat.append(double_low)
         lst_data[id] = lst_dat
 
     # 按双低排序
