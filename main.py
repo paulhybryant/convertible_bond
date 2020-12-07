@@ -6,8 +6,8 @@ import requests
 import csv
 import re
 from lxml import etree
-from time import time, strftime, gmtime
 from absl import app, flags, logging
+from datetime import datetime, date
 
 FLAGS = flags.FLAGS
 
@@ -161,10 +161,14 @@ def process(dat):
             c.append('持仓')
         candidates[c[0]] = c
 
-    for id in cc_dict.keys():
+    for id, value in cc_dict.items():
         if id not in candidates:
-            lst_data[id].append('清仓')
-            candidates[id] = lst_data[id]
+            if id in lst_data:
+                lst_data[id].append('清仓')
+                candidates[id] = lst_data[id]
+            else:
+                value['操作'] = '清仓'
+                candidates[id] = list(value.values())
 
     # 返回时按操作排序
     return sorted(candidates.values(), key=lambda candidate: candidate[8])
@@ -172,7 +176,7 @@ def process(dat):
 
 # 输出转债标的到csv
 def write_csv(data, t):
-    f = open('cb%s.csv' % strftime('%Y%m%d', gmtime(t)),
+    f = open('cb%s.csv' % date.today().strftime('%Y%m%d'),
              'w', encoding='utf-8')
     csv_writer = csv.writer(f)
     csv_writer.writerow(['代 码', '转债名称', '现 价', '溢价率', '市净率', '评级',
@@ -183,7 +187,7 @@ def write_csv(data, t):
 
 
 def main(argv):
-    t = time()
+    t = datetime.strptime(date.today().strftime('%d/%m/%Y'), '%d/%m/%Y').timestamp() + 1
     dat = get_dat(t)
     data = process(dat)
     write_csv(data, t)
