@@ -8,6 +8,7 @@ import re
 from lxml import etree
 from absl import app, flags, logging
 from datetime import datetime, date
+from time import time
 
 FLAGS = flags.FLAGS
 
@@ -187,7 +188,8 @@ def write_csv(data, t):
 
 
 def main(argv):
-    t = datetime.strptime(date.today().strftime('%d/%m/%Y'), '%d/%m/%Y').timestamp() + 1
+    #  t = datetime.strptime(date.today().strftime('%d/%m/%Y'), '%d/%m/%Y').timestamp() + 1
+    t = time()
     dat = get_dat(t)
     data = process(dat)
     write_csv(data, t)
