@@ -156,6 +156,8 @@ def process(dat):
     candidates = {}
     cc_dict = get_cc()
     for c in sorted(lst_data.values(), key=lambda dat: dat[7])[0:FLAGS.top]:
+        if FLAGS.debug:
+            logging.info('%s: %s' % (c[7], ','.join(c)))
         if c[0] not in cc_dict:
             c.append('建仓')
         else:
@@ -168,7 +170,7 @@ def process(dat):
                 lst_data[id].append('清仓')
                 candidates[id] = lst_data[id]
             else:
-                value['操作'] = '清仓'
+                value['操作'] = '清仓(过滤)'
                 candidates[id] = list(value.values())
 
     # 返回时按操作排序
