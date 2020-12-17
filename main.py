@@ -109,7 +109,8 @@ def process(dat):
 
         # 排除已经公布强赎，破净的，仅机构可买的，可交换债
         if force_redeem or float(pb) < 1.0 or btype != 'C' or qflag == 'Q' or float(year_left) < 1:
-            #  logging.warning('过滤 %s %s: %s' % (id, name, filter_reason(force_redeem, pb, btype, qflag, year_left)))
+            if FLAGS.debug:
+                logging.info('过滤 %s %s: %s' % (id, name, filter_reason(force_redeem, pb, btype, qflag, year_left)))
             continue
 
         # 现价
@@ -155,7 +156,7 @@ def process(dat):
     # 按双低排序
     candidates = {}
     cc_dict = get_cc()
-    for c in sorted(lst_data.values(), key=lambda dat: dat[7])[0:FLAGS.top]:
+    for c in sorted(lst_data.values(), key=lambda dat: float(dat[7]))[0:FLAGS.top]:
         if FLAGS.debug:
             logging.info('%s: %s' % (c[7], ','.join(c)))
         if c[0] not in cc_dict:
