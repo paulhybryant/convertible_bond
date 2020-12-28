@@ -19,6 +19,8 @@ flags.DEFINE_string('cc', None, '持仓信息csv文件，格式和产生的标�
 flags.DEFINE_string('blacklist', None, '黑名单文件，格式和产生的标的文件一样.')
 flags.DEFINE_integer('top', 20, 'Number of candidates')
 
+flags.DEFINE_string('id', '', 'ID')
+
 
 # 获取持仓
 def get_cc():
@@ -153,6 +155,10 @@ def process(dat):
         lst_dat.append(double_low)
         lst_data[id] = lst_dat
 
+    if FLAGS.id:
+        logging.info('%s' % ','.join(lst_data[FLAGS.id]))
+        exit()
+
     # 按双低排序
     candidates = {}
     cc_dict = get_cc()
@@ -161,10 +167,16 @@ def process(dat):
             logging.info('%s: %s' % (c[7], ','.join(c)))
         if c[0] not in cc_dict:
             c.append('建仓')
+            c.append(c[2])
             c.append('0%')
         else:
             c.append('持仓')
-            buy_price = float(cc_dict[c[0]]['现 价'])
+            if '建仓价' in cc_dict[c[0]]:
+                c.append(cc_dict[c[0]]['建仓价'])
+                buy_price = float(cc_dict[c[0]]['建仓价'])
+            else:
+                c.append('N/A')
+                buy_price = float(cc_dict[c[0]]['现 价'])
             current_price = float(c[2])
             diff_price = round((current_price - buy_price) / buy_price * 100, 1)
             c.append('%s%%' % diff_price)
@@ -195,7 +207,7 @@ def write_csv(data, t):
              'w', encoding='utf-8')
     csv_writer = csv.writer(f)
     csv_writer.writerow(['代 码', '转债名称', '现 价', '溢价率', '市净率', '评级',
-                         '剩余年限', '双低', '操作', '盈亏'])
+                         '剩余年限', '双低', '操作', '建仓价', '盈亏'])
     for dat in data:
         csv_writer.writerow(dat)
     f.close()
