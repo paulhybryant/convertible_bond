@@ -161,17 +161,28 @@ def process(dat):
             logging.info('%s: %s' % (c[7], ','.join(c)))
         if c[0] not in cc_dict:
             c.append('建仓')
+            c.append('0%')
         else:
             c.append('持仓')
+            buy_price = float(cc_dict[c[0]]['现 价'])
+            current_price = float(c[2])
+            diff_price = round((current_price - buy_price) / buy_price * 100, 1)
+            c.append('%s%%' % diff_price)
         candidates[c[0]] = c
 
     for id, value in cc_dict.items():
         if id not in candidates:
+            buy_price = float(cc_dict[id]['现 价'])
+            current_price = float(lst_data[id][2])
+            diff_price = round((current_price - buy_price) / buy_price * 100, 1)
             if id in lst_data:
                 lst_data[id].append('清仓')
+                lst_data[id].append('%s%%' % diff_price)
                 candidates[id] = lst_data[id]
             else:
+                # Filter by blacklist or drop of pb etc.
                 value['操作'] = '清仓(过滤)'
+                value['盈亏'] = '%s%%' % diff_price
                 candidates[id] = list(value.values())
 
     # 返回时按操作排序
@@ -184,7 +195,7 @@ def write_csv(data, t):
              'w', encoding='utf-8')
     csv_writer = csv.writer(f)
     csv_writer.writerow(['代 码', '转债名称', '现 价', '溢价率', '市净率', '评级',
-                         '剩余年限', '双低', '操作'])
+                         '剩余年限', '双低', '操作', '盈亏'])
     for dat in data:
         csv_writer.writerow(dat)
     f.close()
