@@ -17,6 +17,7 @@ flags.DEFINE_string('save_json', None,
                     'Whether to save the json data to file.')
 flags.DEFINE_string('cc', None, '持仓信息csv文件，格式和产生的标的文件一样.')
 flags.DEFINE_string('blacklist', None, '黑名单文件，格式和产生的标的文件一样.')
+flags.DEFINE_string('pb', None, 'pb低于1也能下调转股价的转债')
 flags.DEFINE_integer('top', 20, 'Number of candidates')
 
 flags.DEFINE_string('id', '', 'ID')
@@ -36,6 +37,7 @@ HEADER_FIELD_DICT = {
     '盈亏': 'gain'
 }
 BLACKLIST = []
+PB = []
 
 
 class ConvertibleBond():
@@ -66,6 +68,8 @@ class ConvertibleBond():
         return content
 
 # 获取持仓
+
+
 def get_cc():
     cc_dict = {}
     with open(FLAGS.cc, 'r', encoding='utf-8') as cc_file:
@@ -117,7 +121,7 @@ def filter_cb(cb):
     if cb.force_redeem:
         result = False
         reason = '公布强赎'
-    if float(cb.pb) < 1.0:
+    if float(cb.pb) < 1.0 and cb.id not in PB:
         result = False
         reason = '破净'
     if cb.btype != 'C':
@@ -142,6 +146,11 @@ def process(dat):
             bl_reader = csv.DictReader(bl, delimiter=',')
             for row in bl_reader:
                 BLACKLIST.append(row['代 码'])
+    if FLAGS.pb:
+        with open(FLAGS.pb, 'r', encoding='utf-8') as pb:
+            for line in pb:
+                PB.append(line.strip())
+        logging.info(PB)
     # 所有数据
     lst_data = {}
     for one in dat['rows']:
@@ -193,7 +202,8 @@ def process(dat):
         #  jiancang = 0
 
         cb = ConvertibleBond()
-        cb.set_fields(id, name, price, premium_rt, pb, rating_cd, year_left, double_low, force_redeem, btype, qflag)
+        cb.set_fields(id, name, price, premium_rt, pb, rating_cd,
+                      year_left, double_low, force_redeem, btype, qflag)
         lst_data[id] = cb
 
     if FLAGS.id:
@@ -212,16 +222,18 @@ def process(dat):
         else:
             c.op = '持仓'
             c.buy_price = cc_dict[c.id].price
-            diff_price = round((float(c.price) - float(c.buy_price)) / float(c.buy_price) * 100, 1)
+            diff_price = round(
+                (float(c.price) - float(c.buy_price)) / float(c.buy_price) * 100, 1)
             c.gain = '%s%%' % diff_price
         candidates[c.id] = c
 
     for id, value in cc_dict.items():
         if id not in candidates:
-            diff_price = round((float(cc_dict[id].price) - float(cc_dict[id].buy_price)) / float(cc_dict[id].buy_price) * 100, 1)
+            diff_price = round((float(cc_dict[id].price) - float(
+                cc_dict[id].buy_price)) / float(cc_dict[id].buy_price) * 100, 1)
             lst_data[id].op = '清仓'
             lst_data[id].buy_price = cc_dict[id].buy_price
-            lst_data[id].gain= '%s%%' % diff_price
+            lst_data[id].gain = '%s%%' % diff_price
             candidates[id] = lst_data[id]
 
     # 返回时按操作排序
