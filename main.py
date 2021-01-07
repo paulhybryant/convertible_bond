@@ -22,6 +22,49 @@ flags.DEFINE_integer('top', 20, 'Number of candidates')
 flags.DEFINE_string('id', '', 'ID')
 
 
+HEADER_FIELD_DICT = {
+    '代 码': 'id',
+    '转债名称': 'name',
+    '现 价': 'price',
+    '溢价率': 'premium_rt',
+    '市净率': 'pb',
+    '评级': 'rating_cd',
+    '剩余年限': 'year_left',
+    '双低': 'double_low',
+    '操作': 'op',
+    '建仓价': 'buy_price',
+    '盈亏': 'gain'
+}
+BLACKLIST = []
+
+
+class ConvertibleBond():
+    def set_fields(self, id, name, price, premium_rt, pb, rating_cd, year_left, double_low, force_redeem, btype, qflag):
+        self.id = id
+        self.name = name
+        self.price = price
+        self.premium_rt = premium_rt
+        self.pb = pb
+        self.rating_cd = rating_cd
+        self.year_left = year_left
+        self.double_low = double_low
+        self.force_redeem = force_redeem
+        self.btype = btype
+        self.qflag = qflag
+        self.op = None
+        self.buy_price = None
+        self.gain = None
+
+    def set_fields_dict(self, dat):
+        for header, attr in HEADER_FIELD_DICT.items():
+            setattr(self, attr, dat[header])
+
+    def contents(self):
+        content = []
+        for header, attr in HEADER_FIELD_DICT.items():
+            content.append(getattr(self, attr))
+        return content
+
 # 获取持仓
 def get_cc():
     cc_dict = {}
@@ -29,7 +72,9 @@ def get_cc():
         cc_reader = csv.DictReader(cc_file, delimiter=',')
         for row in cc_reader:
             if row['操作'] in ['建仓', '持仓']:
-                cc_dict[row['代 码']] = row
+                cb = ConvertibleBond()
+                cb.set_fields_dict(row)
+                cc_dict[cb.id] = cb
     return cc_dict
 
 
@@ -62,38 +107,46 @@ def get_dat(t):
         return json.loads(data)
 
 
-def filter_reason(force_redeem, pb, btype, qflag, year_left):
-    if force_redeem:
-        return '公布强赎'
-    if float(pb) < 1.0:
-        return '破净'
-    if btype != 'C':
-        return '非可转债'
-    if qflag == 'Q':
-        return '机构可买'
-    if float(year_left) < 1:
-        return '剩余年限短：%s' % year_left
-    return 'Bug'
+# 排除已经公布强赎，破净的，仅机构可买的，可交换债
+def filter_cb(cb):
+    reason = ''
+    result = True
+    if cb.id in BLACKLIST:
+        result = False
+        reason = '黑名单'
+    if cb.force_redeem:
+        result = False
+        reason = '公布强赎'
+    if float(cb.pb) < 1.0:
+        result = False
+        reason = '破净'
+    if cb.btype != 'C':
+        result = False
+        reason = '非可转债'
+    if cb.qflag == 'Q':
+        result = False
+        reason = '仅机构可买'
+    if float(cb.year_left) < 1:
+        result = False
+        reason = '剩余年限短：%s' % cb.year_left
+
+    if FLAGS.debug and not result:
+        logging.info('过滤 %s %s: %s' % (cb.id, cb.name, reason))
+    return result
 
 
 # 生成转债标的
 def process(dat):
-    blacklist = []
     if FLAGS.blacklist:
         with open(FLAGS.blacklist, 'r', encoding='utf-8') as bl:
             bl_reader = csv.DictReader(bl, delimiter=',')
             for row in bl_reader:
-                blacklist.append(row['代 码'])
+                BLACKLIST.append(row['代 码'])
     # 所有数据
     lst_data = {}
     for one in dat['rows']:
-        # 每一条数据
-        lst_dat = []
         # 转债id
         id = one['id']
-
-        if id in blacklist:
-            continue
 
         dat_cell = one['cell']
         # 是否公布强制赎回
@@ -108,12 +161,6 @@ def process(dat):
         year_left = dat_cell['year_left']
         # 转债名称
         name = dat_cell['bond_nm']
-
-        # 排除已经公布强赎，破净的，仅机构可买的，可交换债
-        if force_redeem or float(pb) < 1.0 or btype != 'C' or qflag == 'Q' or float(year_left) < 1:
-            if FLAGS.debug:
-                logging.info('过滤 %s %s: %s' % (id, name, filter_reason(force_redeem, pb, btype, qflag, year_left)))
-            continue
 
         # 现价
         price = dat_cell['price']
@@ -145,15 +192,9 @@ def process(dat):
         #  except:
         #  jiancang = 0
 
-        lst_dat.append(id)
-        lst_dat.append(name)
-        lst_dat.append(price)
-        lst_dat.append(premium_rt)
-        lst_dat.append(pb)
-        lst_dat.append(rating_cd)
-        lst_dat.append(year_left)
-        lst_dat.append(double_low)
-        lst_data[id] = lst_dat
+        cb = ConvertibleBond()
+        cb.set_fields(id, name, price, premium_rt, pb, rating_cd, year_left, double_low, force_redeem, btype, qflag)
+        lst_data[id] = cb
 
     if FLAGS.id:
         logging.info('%s' % ','.join(lst_data[FLAGS.id]))
@@ -162,43 +203,29 @@ def process(dat):
     # 按双低排序
     candidates = {}
     cc_dict = get_cc()
-    for c in sorted(lst_data.values(), key=lambda dat: float(dat[7]))[0:FLAGS.top]:
-        if FLAGS.debug:
-            logging.info('%s: %s' % (c[7], ','.join(c)))
-        if c[0] not in cc_dict:
-            c.append('建仓')
-            c.append(c[2])
-            c.append('0%')
+
+    for c in sorted(filter(filter_cb, lst_data.values()), key=lambda cb: float(cb.double_low))[0:FLAGS.top]:
+        if c.id not in cc_dict:
+            c.op = '建仓'
+            c.buy_price = c.price
+            c.gain = '0%'
         else:
-            c.append('持仓')
-            if '建仓价' in cc_dict[c[0]]:
-                c.append(cc_dict[c[0]]['建仓价'])
-                buy_price = float(cc_dict[c[0]]['建仓价'])
-            else:
-                c.append('N/A')
-                buy_price = float(cc_dict[c[0]]['现 价'])
-            current_price = float(c[2])
-            diff_price = round((current_price - buy_price) / buy_price * 100, 1)
-            c.append('%s%%' % diff_price)
-        candidates[c[0]] = c
+            c.op = '持仓'
+            c.buy_price = cc_dict[c.id].price
+            diff_price = round((float(c.price) - float(c.buy_price)) / float(c.buy_price) * 100, 1)
+            c.gain = '%s%%' % diff_price
+        candidates[c.id] = c
 
     for id, value in cc_dict.items():
         if id not in candidates:
-            buy_price = float(cc_dict[id]['现 价'])
-            current_price = float(lst_data[id][2])
-            diff_price = round((current_price - buy_price) / buy_price * 100, 1)
-            if id in lst_data:
-                lst_data[id].append('清仓')
-                lst_data[id].append('%s%%' % diff_price)
-                candidates[id] = lst_data[id]
-            else:
-                # Filter by blacklist or drop of pb etc.
-                value['操作'] = '清仓(过滤)'
-                value['盈亏'] = '%s%%' % diff_price
-                candidates[id] = list(value.values())
+            diff_price = round((float(cc_dict[id].price) - float(cc_dict[id].buy_price)) / float(cc_dict[id].buy_price) * 100, 1)
+            lst_data[id].op = '清仓'
+            lst_data[id].buy_price = cc_dict[id].buy_price
+            lst_data[id].gain= '%s%%' % diff_price
+            candidates[id] = lst_data[id]
 
     # 返回时按操作排序
-    return sorted(candidates.values(), key=lambda candidate: candidate[8])
+    return sorted(candidates.values(), key=lambda candidate: candidate.op)
 
 
 # 输出转债标的到csv
@@ -206,10 +233,9 @@ def write_csv(data, t):
     f = open('cb%s.csv' % date.today().strftime('%Y%m%d'),
              'w', encoding='utf-8')
     csv_writer = csv.writer(f)
-    csv_writer.writerow(['代 码', '转债名称', '现 价', '溢价率', '市净率', '评级',
-                         '剩余年限', '双低', '操作', '建仓价', '盈亏'])
+    csv_writer.writerow(HEADER_FIELD_DICT.keys())
     for dat in data:
-        csv_writer.writerow(dat)
+        csv_writer.writerow(dat.contents())
     f.close()
 
 
