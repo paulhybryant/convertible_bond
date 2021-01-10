@@ -150,7 +150,6 @@ def process(dat):
         with open(FLAGS.pb, 'r', encoding='utf-8') as pb:
             for line in pb:
                 PB.append(line.strip())
-        logging.info(PB)
     # 所有数据
     lst_data = {}
     for one in dat['rows']:
