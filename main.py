@@ -228,7 +228,7 @@ def process(dat):
 
     for id, value in cc_dict.items():
         if id not in candidates:
-            diff_price = round((float(cc_dict[id].price) - float(
+            diff_price = round((float(lst_data[id].price) - float(
                 cc_dict[id].buy_price)) / float(cc_dict[id].buy_price) * 100, 1)
             lst_data[id].op = '清仓'
             lst_data[id].buy_price = cc_dict[id].buy_price
