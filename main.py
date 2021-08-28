@@ -5,7 +5,7 @@ import json
 import pprint
 from absl import app, flags, logging
 
-from jqdatasdk import *
+import jqdatasdk as jqdata
 from lib import conbond
 
 FLAGS = flags.FLAGS
@@ -31,9 +31,9 @@ def main(argv):
     else:
         if FLAGS.data_source == 'jqdata':
             jqconfig = json.load(open('jqconfig.json'))
-            auth(jqconfig['username'], jqconfig['password'])
+            jqdata.auth(jqconfig['username'], jqconfig['password'])
             df_date, df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust = conbond.fetch_jqdata(
-            )
+                jqdata)
             if FLAGS.cache_dir:
                 df_basic_info.to_excel(
                     os.path.join(FLAGS.cache_dir, 'basic_info.xlsx'))
@@ -44,13 +44,13 @@ def main(argv):
                 df_convert_price_adjust.to_excel(
                     os.path.join(FLAGS.cache_dir, 'convert_price_adjust.xlsx'))
             logging.info('Using latest jqdata from date: %s' %
-                        df_date.strftime('%Y-%m-%d'))
+                         df_date.strftime('%Y-%m-%d'))
         else:
             # TODO: get data from jisilu
             pass
 
     df = conbond.massage_data(df_basic_info, df_latest_bond_price,
-                                df_latest_stock_price, df_convert_price_adjust)
+                              df_latest_stock_price, df_convert_price_adjust)
     logging.info('Using double_low strategy')
     candidates = conbond.execute_strategy(
         df, conbond.double_low, {

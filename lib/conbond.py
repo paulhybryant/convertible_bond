@@ -6,23 +6,26 @@ from collections.abc import Callable
 
 
 # To use this locally, need to call auth() first
-def fetch_jqdata():
+def fetch_jqdata(jqdata):
     yesterday = date.today() - timedelta(days=1)
-    txn_day = get_trade_days(end_date=yesterday, count=1)[0]
-    df_basic_info = bond.run_query(query(bond.CONBOND_BASIC_INFO))
+    txn_day = jqdata.get_trade_days(end_date=yesterday, count=1)[0]
+    df_basic_info = jqdata.bond.run_query(
+        jqdata.query(jqdata.bond.CONBOND_BASIC_INFO))
     # Filter non-conbond, e.g. exchange bond
     df_basic_info = df_basic_info[df_basic_info.bond_type_id == 703013]
     # Keep active bonds only
     df_basic_info = df_basic_info[df_basic_info.list_status_id == 301001]
-    df_latest_bond_price = bond.run_query(
-        query(bond.CONBOND_DAILY_PRICE).filter(
-            bond.CONBOND_DAILY_PRICE.date == txn_day))
-    df_latest_stock_price = get_price(df_basic_info.company_code.tolist(),
-                                      start_date=txn_day,
-                                      end_date=txn_day,
-                                      frequency='daily')
-    df_convert_price_adjust = bond.run_query(
-        query(bond.CONBOND_CONVERT_PRICE_ADJUST))
+    df_latest_bond_price = jqdata.bond.run_query(
+        jqdata.query(jqdata.bond.CONBOND_DAILY_PRICE).filter(
+            jqdata.bond.CONBOND_DAILY_PRICE.date == txn_day))
+    df_latest_stock_price = jqdata.get_price(
+        df_basic_info.company_code.tolist(),
+        start_date=txn_day,
+        end_date=txn_day,
+        frequency='daily',
+        panel=False)
+    df_convert_price_adjust = jqdata.bond.run_query(
+        jqdata.query(jqdata.bond.CONBOND_CONVERT_PRICE_ADJUST))
     return txn_day, df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust
 
 
