@@ -2,10 +2,9 @@
 
 import os
 import json
-import pandas as pd
 import pprint
 from absl import app, flags, logging
-from datetime import date
+
 from jqdatasdk import *
 from lib import conbond
 
@@ -50,7 +49,7 @@ def main(argv):
             # TODO: get data from jisilu
             pass
 
-    df = conbond.massage_jqdata(df_basic_info, df_latest_bond_price,
+    df = conbond.massage_data(df_basic_info, df_latest_bond_price,
                                 df_latest_stock_price, df_convert_price_adjust)
     logging.info('Using double_low strategy')
     candidates = conbond.execute_strategy(
