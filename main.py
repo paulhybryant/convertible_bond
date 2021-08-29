@@ -4,6 +4,7 @@ import os
 import json
 import pprint
 from absl import app, flags, logging
+from datetime import date
 
 import jqdatasdk as jqdata
 from lib import conbond
@@ -33,7 +34,7 @@ def main(argv):
             jqconfig = json.load(open('jqconfig.json'))
             jqdata.auth(jqconfig['username'], jqconfig['password'])
             df_date, df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust = conbond.fetch_jqdata(
-                jqdata)
+                jqdata, date.today())
             if FLAGS.cache_dir:
                 df_basic_info.to_excel(
                     os.path.join(FLAGS.cache_dir, 'basic_info.xlsx'))
@@ -58,6 +59,7 @@ def main(argv):
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
         })
+    candidates['code'] = candidates[['code', 'exchange_code']].agg('.'.join, axis=1)
     logging.info('Candidates:\n%s' % candidates[[
         'code', 'short_name', 'bond_price', 'convert_premium_rate',
         'double_low'

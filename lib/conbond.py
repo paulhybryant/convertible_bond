@@ -6,9 +6,9 @@ from collections.abc import Callable
 
 
 # To use this locally, need to call auth() first
-def fetch_jqdata(jqdata):
-    yesterday = date.today() - timedelta(days=1)
-    txn_day = jqdata.get_trade_days(end_date=yesterday, count=1)[0]
+def fetch_jqdata(jqdata, today):
+    txn_day = jqdata.get_trade_days(end_date=(today - timedelta(days=1)),
+                                    count=1)[0]
     df_basic_info = jqdata.bond.run_query(
         jqdata.query(jqdata.bond.CONBOND_BASIC_INFO))
     # Filter non-conbond, e.g. exchange bond
@@ -36,7 +36,7 @@ def massage_data(df_basic_info, df_latest_bond_price, df_latest_stock_price,
         'code', 'short_name', 'company_code', 'convert_price'
     ]]
     df_latest_bond_price = df_latest_bond_price[[
-        'code', 'close'
+        'code', 'exchange_code', 'close'
     ]].rename(columns={'close': 'bond_price'})
     df_latest_stock_price = df_latest_stock_price[[
         'code', 'close'
