@@ -25,7 +25,7 @@ def main(argv):
     df_date = None  # Date of the price information
 
     if FLAGS.use_cache:
-        df_date, df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust = conbond.fetch_cache(
+        df_date, df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust = fetch_cache(
             FLAGS.cache_dir)
         logging.info('Using cached data from date: %s' %
                      df_date.strftime('%Y-%m-%d'))
@@ -50,22 +50,31 @@ def main(argv):
             # TODO: get data from jisilu
             pass
 
-    df = conbond.massage_data(df_basic_info, df_latest_bond_price,
-                              df_latest_stock_price, df_convert_price_adjust)
     logging.info('Using double_low strategy')
-    candidates = conbond.execute_strategy(
-        df, conbond.double_low, {
+    candidates, orders = conbond.generate_candidates(
+        df_basic_info, df_latest_bond_price, df_latest_stock_price,
+        df_convert_price_adjust, conbond.double_low, {
             'weight_bond_price': 0.5,
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
-        })
-    candidates['code'] = candidates[['code', 'exchange_code']].agg('.'.join, axis=1)
+        }, set())
     logging.info('Candidates:\n%s' % candidates[[
         'code', 'short_name', 'bond_price', 'convert_premium_rate',
         'double_low'
     ]])
-    orders = conbond.generate_orders(set(), set(candidates.code.tolist()))
     pprint.pprint(orders)
+
+
+def fetch_cache(cache_dir):
+    df_basic_info = pd.read_excel(os.path.join(cache_dir, 'basic_info.xlsx'))
+    df_latest_bond_price = pd.read_excel(
+        os.path.join(cache_dir, 'latest_bond_price.xlsx'))
+    df_latest_stock_price = pd.read_excel(
+        os.path.join(cache_dir, 'latest_stock_price.xlsx'))
+    df_convert_price_adjust = pd.read_excel(
+        os.path.join(cache_dir, 'convert_price_adjust.xlsx'))
+    return df_latest_bond_price.date[
+        0], df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust
 
 
 if __name__ == "__main__":

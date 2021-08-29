@@ -1,13 +1,15 @@
-import numpy as np
-import os
-import pandas as pd
-from datetime import date, timedelta
-from collections.abc import Callable
+# -*- coding: utf-8 -*-
+# 导入函数库
+import jqdata
+import conbond
+import warnings
 
 
 # Code to run on joinquant
 # 初始化函数，设定基准等等
 def initialize(context):
+    warnings.filterwarnings("ignore")
+    jqdata.get_price = get_price
     # 设定沪深300作为基准
     set_benchmark('000300.XSHG')
     # 开启动态复权模式(真实价格)
@@ -44,38 +46,30 @@ def market_open(context):
     # 给微信发送消息（添加模拟交易，并绑定微信生效）
     # send_message('今天调仓')
 
-    df_date, df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust = fetch_jqdata(
-    )
+    df_date, df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust = conbond.fetch_jqdata(
+        jqdata, context.current_dt)
     log.info('Using latest jqdata from date: %s' %
              df_date.strftime('%Y-%m-%d'))
-    df = massage_jqdata(df_basic_info, df_latest_bond_price,
-                        df_latest_stock_price, df_convert_price_adjust)
-    candidates = execute_strategy(df, double_low, {
-        'weight_bond_price': 0.5,
-        'weight_convert_premium_rate': 0.5,
-        'top': g.top,
-    })
+    candidates, orders = conbond.generate_candidates(
+        df_basic_info, df_latest_bond_price, df_latest_stock_price,
+        df_convert_price_adjust, conbond.double_low, {
+            'weight_bond_price': 0.5,
+            'weight_convert_premium_rate': 0.5,
+            'top': g.top,
+        }, set())
+    candidates['code'] = candidates[['code', 'exchange_code']].agg('.'.join,
+                                                                   axis=1)
     log.info('Candidates:\n%s' % candidates[[
         'code', 'short_name', 'bond_price', 'convert_premium_rate',
         'double_low'
     ]])
-    orders = generate_orders(set(),
-                             set(g.candidates.reset_index().code.tolist()))
-    execute_orders(orders)
+    execute_orders(orders, context.portfolio)
 
 
-def execute_orders(orders: dict[str, set[str]]):
+def execute_orders(orders, portfolio):
     for code in orders['sell']:
-        security = g.candidates.loc[code]
-        log.info('Selling %s %s' % (code, security.short_name))
         order_target(code, 0)
 
-    for code in orders['hold']:
-        security = g.candidates.loc[code]
-        log.info('Holding %s %s' % (code, security.short_name))
-        order_target_value(code, g.portfolio.total_value / g.top)
-
-    for code in orders['buy']:
-        security = g.candidates.loc[code]
-        log.info('Buying %s %s' % (code, security.short_name))
-        order_target_value(code, g.portfolio.total_value / g.top)
+    for op in ['hold', 'buy']:
+        for code in orders[op]:
+            order_target_value(code, portfolio.total_value / g.top)

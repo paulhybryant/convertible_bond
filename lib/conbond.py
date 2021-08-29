@@ -100,13 +100,13 @@ def execute_strategy(df, strategy, config):
     return strategy(df, config)
 
 
-def fetch_cache(cache_dir):
-    df_basic_info = pd.read_excel(os.path.join(cache_dir, 'basic_info.xlsx'))
-    df_latest_bond_price = pd.read_excel(
-        os.path.join(cache_dir, 'latest_bond_price.xlsx'))
-    df_latest_stock_price = pd.read_excel(
-        os.path.join(cache_dir, 'latest_stock_price.xlsx'))
-    df_convert_price_adjust = pd.read_excel(
-        os.path.join(cache_dir, 'convert_price_adjust.xlsx'))
-    return df_latest_bond_price.date[
-        0], df_basic_info, df_latest_bond_price, df_latest_stock_price, df_convert_price_adjust
+def generate_candidates(df_basic_info, df_latest_bond_price,
+                        df_latest_stock_price, df_convert_price_adjust,
+                        strategy, strategy_config, holdings):
+    df = massage_data(df_basic_info, df_latest_bond_price,
+                      df_latest_stock_price, df_convert_price_adjust)
+    candidates = execute_strategy(df, strategy, strategy_config)
+    candidates['code'] = candidates[['code', 'exchange_code']].agg('.'.join,
+                                                                   axis=1)
+    orders = generate_orders(holdings, set(candidates.code.tolist()))
+    return candidates, orders
