@@ -6,9 +6,9 @@ import pandas as pd
 import pprint
 from absl import app, flags, logging
 from datetime import date, timedelta
-
 import jqdatasdk as jqdata
 from lib import conbond
+import execjs
 
 FLAGS = flags.FLAGS
 
@@ -49,7 +49,15 @@ def main(argv):
             # jslencode('user_name', A397151C04723421F)
             # same for password
             jisilu = json.load(open('jisilu.json'))
-            df_date, data = conbond.fetch_jisilu(jisilu['user_name'], jisilu['password'])
+            with open('jisilu.js', 'r', encoding='utf8') as f:
+                source = f.read()
+            ctx = execjs.compile(source)
+            user_name = ctx.call('jslencode', jisilu['user_name'], '397151C04723421F')
+            password = ctx.call('jslencode', jisilu['password'], '397151C04723421F')
+            logging.info(user_name)
+            logging.info(password)
+            return
+            df_date, data = conbond.fetch_jisilu(user_name, password)
             logging.info('Fetching latest jisilu data')
             cache_jisilu(FLAGS.cache_dir, data)
         df_date, data = fetch_jisilucache(FLAGS.cache_dir)
