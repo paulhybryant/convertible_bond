@@ -117,18 +117,20 @@ def generate_candidates(df, strategy, strategy_config, holdings):
 def fetch_jisilu(user_name, password):
     today = date.today()
     headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36'
-}
+        'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36'
+    }
     s = requests.Session()
-    s.post(
-        'https://www.jisilu.cn/account/ajax/login_process', data={
-            '_post_type': 'ajax',
-            'aes': 1,
-            'net_auto_login': '1',
-            'password': password,
-            'return_url': 'https://www.jisilu.cn/',
-            'user_name': user_name,
-        }, headers=headers)
+    s.post('https://www.jisilu.cn/account/ajax/login_process/',
+           data={
+               '_post_type': 'ajax',
+               'aes': 1,
+               'net_auto_login': '1',
+               'password': password,
+               'return_url': 'https://www.jisilu.cn/',
+               'user_name': user_name,
+           },
+           headers=headers)
     url = 'https://www.jisilu.cn/data/cbnew/cb_list/?___jsl=LST___t=%s' % int(
         datetime.fromordinal(today.toordinal()).timestamp() * 1000)
     payload = {'listed': 'Y'}
