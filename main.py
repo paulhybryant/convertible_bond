@@ -44,7 +44,12 @@ def main(argv):
                                     df_convert_price_adjust)
     elif FLAGS.data_source == 'jisilu':
         if not FLAGS.use_cache:
-            df_date, data = conbond.fetch_jisilu()
+            # Created with
+            # var A397151C04723421F = '397151C04723421F';
+            # jslencode('user_name', A397151C04723421F)
+            # same for password
+            jisilu = json.load(open('jisilu.json'))
+            df_date, data = conbond.fetch_jisilu(jisilu['user_name'], jisilu['password'])
             logging.info('Fetching latest jisilu data')
             cache_jisilu(FLAGS.cache_dir, data)
         df_date, data = fetch_jisilucache(FLAGS.cache_dir)
