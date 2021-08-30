@@ -50,13 +50,15 @@ def market_open(context):
         jqdata, context.current_dt)
     log.info('Using latest jqdata from date: %s' %
              df_date.strftime('%Y-%m-%d'))
+    df = conbond.massage_jqdata(df_basic_info, df_latest_bond_price,
+                                df_latest_stock_price,
+                                df_convert_price_adjust)
     candidates, orders = conbond.generate_candidates(
-        df_basic_info, df_latest_bond_price, df_latest_stock_price,
-        df_convert_price_adjust, conbond.double_low, {
+        df, conbond.double_low, {
             'weight_bond_price': 0.5,
             'weight_convert_premium_rate': 0.5,
             'top': g.top,
-        }, set())
+        }, context.portfolio.positions().keys())
     candidates['code'] = candidates[['code', 'exchange_code']].agg('.'.join,
                                                                    axis=1)
     log.info('Candidates:\n%s' % candidates[[
