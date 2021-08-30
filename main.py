@@ -54,9 +54,6 @@ def main(argv):
             ctx = execjs.compile(source)
             user_name = ctx.call('jslencode', jisilu['user_name'], '397151C04723421F')
             password = ctx.call('jslencode', jisilu['password'], '397151C04723421F')
-            logging.info(user_name)
-            logging.info(password)
-            return
             df_date, data = conbond.fetch_jisilu(user_name, password)
             logging.info('Fetching latest jisilu data')
             cache_jisilu(FLAGS.cache_dir, data)
