@@ -16,7 +16,7 @@ flags.DEFINE_bool("use_cache", False, "Use cache or not")
 flags.DEFINE_string("cache_dir", None, "Cache directory")
 flags.DEFINE_integer("top", 20, "Number of candidates")
 flags.DEFINE_string("data_source", "jqdata",
-                    "Data source: jqdata, cache, jisilu")
+                    "Data source: jqdata, jisilu")
 
 
 def main(argv):
