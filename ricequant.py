@@ -14,7 +14,7 @@ def handle_bar(context, bar_dict):
 
 
 def rebalance(context, bar_dict):
-    df_date, df = conbond.fetch_rqdata(rqdata, context.now.date())
+    df_date, df = conbond.fetch_rqdata(rqdatac, context.now.date())
     log.info('Using latest jqdata from date: %s' %
              df_date.strftime('%Y-%m-%d'))
     # TODO: pass actual holdings from context
