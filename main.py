@@ -85,12 +85,18 @@ def main(argv):
         'code', 'short_name', 'bond_price', 'convert_premium_rate',
         'double_low'
     ]])
-    pprint.pprint(orders)
-    positions['current'] = date.today().strftime('%Y-%m-%d')
-    positions[positions['current']] = {}
-    positions[positions['current']]['positions'] = candidates.code.tolist()
-    positions[positions['current']]['orders'] = orders
-    positions_file.open('w').write(json.dumps(positions))
+    for k, v in orders.items():
+        logging.info('%s: %s' % (k, v))
+    confirm = input('Update positions (y/n)? ')
+    if confirm == 'y':
+        logging.info('Updating positions')
+        positions['current'] = date.today().strftime('%Y-%m-%d')
+        positions[positions['current']] = {}
+        positions[positions['current']]['positions'] = candidates.code.tolist()
+        positions[positions['current']]['orders'] = orders
+        positions_file.open('w').write(json.dumps(positions))
+    else:
+        logging.info('Positions is not updated.')
 
 
 if __name__ == "__main__":
