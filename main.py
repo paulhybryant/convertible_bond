@@ -18,6 +18,9 @@ flags.DEFINE_string("cache_dir", None, "Cache directory")
 flags.DEFINE_integer("top", 20, "Number of candidates")
 flags.DEFINE_string("data_source", "jqdata", "Data source: jqdata, jisilu")
 flags.DEFINE_string("positions", "positions.json", "File to store positions")
+flags.DEFINE_string("txn_day",
+                    date.today().strftime('%Y-%m-%d'),
+                    "Date to generate the candidates")
 
 
 def main(argv):
@@ -36,8 +39,10 @@ def main(argv):
             assert 'username' in auth['jqdata']
             assert 'password' in auth['jqdata']
             jqdata.auth(auth['jqdata']['username'], auth['jqdata']['password'])
-        df_date, df = conbond.fetch_jqdata(jqdata, date.today(),
-                                           FLAGS.cache_dir, FLAGS.use_cache)
+        today = date.fromisoformat(FLAGS.txn_day)
+        df_date, df = conbond.fetch_jqdata(jqdata, today, FLAGS.cache_dir,
+                                           FLAGS.use_cache)
+        assert df_date < today, 'Cached data should be older than --txn_day'
         logging.info('Using data from date: %s' % df_date.strftime('%Y-%m-%d'))
     elif FLAGS.data_source == 'jisilu':
         # Created with
@@ -90,7 +95,7 @@ def main(argv):
     confirm = input('Update positions (y/n)? ')
     if confirm == 'y':
         logging.info('Updating positions')
-        positions['current'] = date.today().strftime('%Y-%m-%d')
+        positions['current'] = df_date.strftime('%Y-%m-%d')
         positions[positions['current']] = {}
         positions[positions['current']]['positions'] = candidates.code.tolist()
         positions[positions['current']]['orders'] = orders
