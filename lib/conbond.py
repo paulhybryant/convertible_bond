@@ -32,8 +32,6 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
             jqdata.query(jqdata.bond.CONBOND_BASIC_INFO))
         # Filter non-conbond, e.g. exchange bond
         df_basic_info = df_basic_info[df_basic_info.bond_type_id == 703013]
-        # Keep active bonds only
-        df_basic_info = df_basic_info[df_basic_info.list_status_id == 301001]
         df_latest_bond_price = jqdata.bond.run_query(
             jqdata.query(jqdata.bond.CONBOND_DAILY_PRICE).filter(
                 jqdata.bond.CONBOND_DAILY_PRICE.date == txn_day))
@@ -64,15 +62,6 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
     df_latest_bond_price = df_latest_bond_price[[
         'code', 'exchange_code', 'close'
     ]].rename(columns={'close': 'bond_price'})
-    df_latest_stock_price = df_latest_stock_price[[
-        'code', 'close'
-    ]].rename(columns={'close': 'stock_price'})
-    df_convert_price_adjust = df_convert_price_adjust[[
-        'code', 'new_convert_price'
-    ]].groupby('code').min()
-    df_convert_price_adjust = df_convert_price_adjust.rename(
-        columns={'new_convert_price': 'convert_price'})
-
     # Join basic_info with latest_bond_price to get close price from last transaction day
     # Schema: code, short_name, company_code, bond_price
     df = df_basic_info.set_index('code').join(
@@ -81,12 +70,22 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
     # Some bonds are still listed, but is not traded (e.g. 2021-08-26, 123029)
     df = df[df.bond_price > 0]
 
+    # TODO: When generating the convert_price, should use the convert_price at txn_day, not the newest one
+    df_convert_price_adjust = df_convert_price_adjust[[
+        'code', 'new_convert_price'
+    ]].groupby('code').min()
+    df_convert_price_adjust = df_convert_price_adjust.rename(
+        columns={'new_convert_price': 'convert_price'})
+
     # Join with convert_price_adjust to get latest convert price
     # code in convert_price_latest is str, while code in df is int64
     df['code'] = df.code.astype(str)
     # Schema: code, short_name, company_code, bond_price, convert_price
     df = df.set_index('code').join(df_convert_price_adjust)
 
+    df_latest_stock_price = df_latest_stock_price[[
+        'code', 'close'
+    ]].rename(columns={'close': 'stock_price'})
     # Join with latest_stock_price to get latest stock price
     # Schema: code, short_name, company_code, bond_price, convert_price, stock_price
     df = df.reset_index().set_index('company_code').join(
