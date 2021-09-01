@@ -128,9 +128,9 @@ def generate_candidates(df, strategy, strategy_config, holdings):
 
     candidate_codes = set(candidates.code.tolist())
     orders = {}
-    orders['buy'] = candidate_codes - holdings
-    orders['sell'] = holdings - candidate_codes
-    orders['hold'] = holdings & candidate_codes
+    orders['buy'] = list(candidate_codes - holdings)
+    orders['sell'] = list(holdings - candidate_codes)
+    orders['hold'] = list(holdings & candidate_codes)
     return candidates, orders
 
 

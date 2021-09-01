@@ -11,20 +11,20 @@ class TestConbond(unittest.TestCase):
     def test_double_low(self):
         hold = set(['113033.XSHG'])
         sell = set(['1', '2', '3'])
-        holdings = set.union(sell, hold)
+        positions = set.union(sell, hold)
         candidates, orders = conbond.generate_candidates(
             self.df, conbond.double_low, {
                 'weight_bond_price': 0.5,
                 'weight_convert_premium_rate': 0.5,
                 'top': 20,
-            }, holdings)
+            }, positions)
         self.assertTrue('buy' in orders)
         self.assertTrue('sell' in orders)
         self.assertTrue('hold' in orders)
-        print(candidates.code.tolist())
-        self.assertEqual(orders['buy'], set(candidates.code.tolist()) - hold)
-        self.assertEqual(orders['sell'], sell)
-        self.assertEqual(orders['hold'], hold)
+        self.assertEqual(set(orders['buy']),
+                         set(candidates.code.tolist()) - hold)
+        self.assertEqual(set(orders['sell']), sell)
+        self.assertEqual(set(orders['hold']), hold)
 
 
 if __name__ == '__main__':
