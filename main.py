@@ -78,10 +78,7 @@ def main(argv):
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
         }, set(positions[positions['current']]['positions']))
-    logging.info('Candidates:\n%s' % candidates[[
-        'code', 'short_name', 'bond_price', 'convert_premium_rate',
-        'double_low'
-    ]])
+    logging.info('Candidates:\n%s' % candidates)
     for k, v in orders.items():
         logging.info('%s: %s' % (k, v))
     confirm = input('Update positions (y/n)? ')

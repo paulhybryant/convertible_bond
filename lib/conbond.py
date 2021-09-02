@@ -59,6 +59,8 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
     df_basic_info = df_basic_info[df_basic_info.bond_type_id == 703013]
+    # Filter de-listed
+    df_basic_info = df_basic_info[df_basic_info.list_status_id == 301001]
     df_basic_info = df_basic_info[[
         'code',
         'short_name',
