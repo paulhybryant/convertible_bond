@@ -190,8 +190,12 @@ def fetch_jisilu(user_name, password, cache_dir, use_cache):
     for row in jisilu_data['rows']:
         jd[row['id']] = row['cell']
     df = pd.io.json.read_json(json.dumps(jd), orient='index')
-    # filter exchangeable bond
-    df = df[df['btype'] == 'C']
+    # 过滤可交换债，只保留可转债
+    df = df[df.btype == 'C']
+    # 过滤仅机构可买
+    df = df[df.qflag != 'Q']
+    # 过滤已公布强赎
+    df = df[pd.isnull(df.force_redeem)]
     df = df.rename(
         columns={
             'bond_id': 'code',
