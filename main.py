@@ -10,13 +10,15 @@ import jqdatasdk as jqdata
 from lib import conbond
 import execjs
 import pathlib
+import rqdatac
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_bool("use_cache", False, "Use cache or not")
 flags.DEFINE_string("cache_dir", None, "Cache directory")
 flags.DEFINE_integer("top", 20, "Number of candidates")
-flags.DEFINE_string("data_source", "jqdata", "Data source: jqdata, jisilu")
+flags.DEFINE_string("data_source", "jqdata",
+                    "Data source: jqdata, jisilu, rqdata")
 flags.DEFINE_string("positions", "positions.json", "File to store positions")
 flags.DEFINE_string("txn_day",
                     date.today().strftime('%Y-%m-%d'),
@@ -37,26 +39,26 @@ def main(argv):
         assert FLAGS.data_source in auth
         assert 'username' in auth[FLAGS.data_source]
         assert 'password' in auth[FLAGS.data_source]
+        username = auth[FLAGS.data_source]['username']
+        password = auth[FLAGS.data_source]['password']
 
     if FLAGS.data_source == 'jqdata':
-        if not FLAGS.use_cache:
-            username = auth[FLAGS.data_source]['username']
-            password = auth[FLAGS.data_source]['password']
         df_date, df = conbond.fetch_jqdata(username, password, jqdata,
                                            date.fromisoformat(FLAGS.txn_day),
                                            FLAGS.cache_dir, FLAGS.use_cache)
     elif FLAGS.data_source == 'jisilu':
-        if not FLAGS.use_cache:
-            with open('jisilu.js', 'r', encoding='utf8') as f:
-                source = f.read()
-            key = '397151C04723421F'
-            ctx = execjs.compile(source)
-            username = ctx.call('jslencode', auth[FLAGS.data_source]['username'],
-                                key)
-            password = ctx.call('jslencode', auth[FLAGS.data_source]['password'],
-                                key)
+        with open('jisilu.js', 'r', encoding='utf8') as f:
+            source = f.read()
+        key = '397151C04723421F'
+        ctx = execjs.compile(source)
+        username = ctx.call('jslencode', username, key)
+        password = ctx.call('jslencode', password, key)
         df_date, df = conbond.fetch_jisilu(username, password, FLAGS.cache_dir,
                                            FLAGS.use_cache)
+    elif FLAGS.data_source == 'rqdata':
+        df_date, df = conbond.fetch_rqdata(username, password, rqdatac,
+                                           date.fromisoformat(FLAGS.txn_day),
+                                           FLAGS.cache_dir, FLAGS.use_cache)
     else:
         raise
 

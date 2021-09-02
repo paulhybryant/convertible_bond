@@ -6,7 +6,6 @@ from datetime import datetime, date, timedelta
 import json
 
 
-# To use this locally, need to call auth() first
 def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
     df_basic_info = None
     df_latest_bond_price = None
@@ -32,8 +31,6 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
                                         count=1)[0]
         df_basic_info = jqdata.bond.run_query(
             jqdata.query(jqdata.bond.CONBOND_BASIC_INFO))
-        # Filter non-conbond, e.g. exchange bond
-        df_basic_info = df_basic_info[df_basic_info.bond_type_id == 703013]
         # For some reason some company_code is nan
         df_basic_info = df_basic_info[pd.notnull(
             df_basic_info['company_code'])]
@@ -46,6 +43,7 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
             end_date=txn_day,
             frequency='daily',
             panel=False)
+        # TODO: Add filter here instead of later
         df_convert_price_adjust = jqdata.bond.run_query(
             jqdata.query(jqdata.bond.CONBOND_CONVERT_PRICE_ADJUST))
 
@@ -59,6 +57,8 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
                 os.path.join(cache_dir, 'convert_price_adjust.xlsx'))
 
     # Data cleaning
+    # Filter non-conbond, e.g. exchange bond
+    df_basic_info = df_basic_info[df_basic_info.bond_type_id == 703013]
     df_basic_info = df_basic_info[[
         'code',
         'short_name',
@@ -68,13 +68,14 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
         'code', 'exchange_code', 'close'
     ]].rename(columns={'close': 'bond_price'})
     # Join basic_info with latest_bond_price to get close price from last transaction day
-    # Schema: code, short_name, company_code, bond_price
+    # Schema: code, short_name, company_code, bond_price, exchange_code
     df = df_basic_info.set_index('code').join(
         df_latest_bond_price.set_index('code')).reset_index()
     # Keep only bonds that are listed and also can be traded
     # Some bonds are still listed, but is not traded (e.g. 2021-08-26, 123029)
     df = df[df.bond_price > 0]
 
+    # TODO: Repalce this, move it earlier
     # Filter price adjust so that the convert price is the correct one at that day
     # Using the latest one is wrong as it can be sometime newer than txn_day
     df_convert_price_adjust['adjust_date'] = pd.to_datetime(
@@ -90,21 +91,24 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
     # Join with convert_price_adjust to get latest convert price
     # code in convert_price_latest is str, while code in df is int64
     df['code'] = df.code.astype(str)
-    # Schema: code, short_name, company_code, bond_price, convert_price
+    # Schema: code, short_name, company_code, bond_price, convert_price, exchange_code
     df = df.set_index('code').join(df_convert_price_adjust)
 
     df_latest_stock_price = df_latest_stock_price[[
         'code', 'close'
     ]].rename(columns={'close': 'stock_price'})
     # Join with latest_stock_price to get latest stock price
-    # Schema: code, short_name, company_code, bond_price, convert_price, stock_price
+    # Schema: code, short_name, company_code, bond_price, convert_price, stock_price, exchange_code
     df = df.reset_index().set_index('company_code').join(
         df_latest_stock_price.set_index('code'))
 
     # Calculate convert_premium_rate
-    # Schema: code, short_name, company_code, bond_price, convert_price, stock_price, convert_premium_rate
+    # Schema: code, short_name, company_code, bond_price, convert_price, stock_price, convert_premium_rate, exchange_code
     df['convert_premium_rate'] = df.bond_price / (100 / df.convert_price *
                                                   df.stock_price) - 1
+
+    df['code'] = df[['code', 'exchange_code']].agg('.'.join, axis=1)
+    df = df.drop(columns=['exchange_code'])
     return txn_day, df
 
 
@@ -132,9 +136,6 @@ def double_low(df, config):
 
 def generate_candidates(df, strategy, strategy_config, holdings):
     candidates = strategy(df, strategy_config)
-    candidates['code'] = candidates[['code', 'exchange_code']].agg('.'.join,
-                                                                   axis=1)
-
     candidate_codes = set(candidates.code.tolist())
     orders = {}
     orders['buy'] = list(candidate_codes - holdings)
@@ -206,15 +207,101 @@ def fetch_jisilu(user_name, password, cache_dir, use_cache):
             'premium_rt': 'convert_premium_rate',
             'dblow': 'double_low'
         }).reset_index()
-    df['exchange_code'] = df.reset_index().apply(
-        lambda row: 'XSHE' if row.company_code.startswith('sz') else 'XSHG',
+    df['code'] = df.reset_index().apply(
+        lambda row: row['code'] + '.XSHE'
+        if row.company_code.startswith('sz') else row['code'] + '.XSHG',
         axis=1)
     df['code'] = df['code'].astype(str)
     return txn_day, df[[
-        'code', 'short_name', 'company_code', 'exchange_code', 'bond_price',
-        'stock_price', 'convert_premium_rate', 'double_low'
+        'code', 'short_name', 'company_code', 'bond_price', 'stock_price',
+        'convert_premium_rate', 'double_low'
     ]]
 
 
-def fetch_rqdata(rqdatac, today):
-    pass
+def fetch_rqdata(username, password, rqdatac, today, cache_dir, use_cache):
+    df_basic_info = None
+    df_latest_bond_price = None
+    df_latest_stock_price = None
+    df_convert_price_adjust = None
+    txn_day = None
+
+    if use_cache:
+        assert cache_dir
+        df_basic_info = pd.read_excel(
+            os.path.join(cache_dir, 'rq_basic_info.xlsx'))
+        df_latest_bond_price = pd.read_excel(
+            os.path.join(cache_dir, 'rq_latest_bond_price.xlsx'))
+        df_latest_stock_price = pd.read_excel(
+            os.path.join(cache_dir, 'rq_latest_stock_price.xlsx'))
+        df_convert_price_adjust = pd.read_excel(
+            os.path.join(cache_dir, 'rq_convert_price_adjust.xlsx'))
+        txn_day = df_latest_bond_price.date[0]
+        assert txn_day < today, 'Cached data should be older than %s' % today
+    else:
+        rqdatac.init(username, password)
+        txn_day = rqdatac.get_previous_trading_date(today)
+        df_basic_info = rqdatac.convertible.all_instruments(
+            txn_day).reset_index()
+        df_latest_bond_price = rqdatac.get_price(
+            df_basic_info.order_book_id.tolist(),
+            start_date=txn_day,
+            end_date=txn_day,
+            frequency='1d').reset_index()
+        df_latest_stock_price = rqdatac.get_price(
+            df_basic_info.stock_code.tolist(),
+            start_date=txn_day,
+            end_date=txn_day,
+            frequency='1d').reset_index()
+        df_convert_price_adjust = rqdatac.convertible.get_conversion_price(
+            df_basic_info.order_book_id.tolist(),
+            end_date=txn_day).reset_index()
+
+        if cache_dir:
+            df_basic_info.to_excel(
+                os.path.join(cache_dir, 'rq_basic_info.xlsx'))
+            df_latest_bond_price.to_excel(
+                os.path.join(cache_dir, 'rq_latest_bond_price.xlsx'))
+            df_latest_stock_price.to_excel(
+                os.path.join(cache_dir, 'rq_latest_stock_price.xlsx'))
+            df_convert_price_adjust.to_excel(
+                os.path.join(cache_dir, 'rq_convert_price_adjust.xlsx'))
+
+    # Data cleaning
+    # Filter non-conbond, e.g. exchange bond
+    df_basic_info = df_basic_info[df_basic_info.bond_type == 'cb']
+    df_basic_info = df_basic_info[[
+        'order_book_id',
+        'symbol',
+        'stock_code',
+    ]]
+    df_latest_bond_price = df_latest_bond_price[[
+        'order_book_id', 'close'
+    ]].rename(columns={'close': 'bond_price'})
+    # Join basic_info with latest_bond_price to get close price from last transaction day
+    # Schema: code, short_name, company_code, bond_price
+    df = df_basic_info.set_index('order_book_id').join(
+        df_latest_bond_price.set_index('order_book_id')).reset_index()
+
+    df_convert_price_adjust = df_convert_price_adjust[[
+        'order_book_id', 'conversion_price'
+    ]].groupby('order_book_id').min()
+    df_convert_price_adjust = df_convert_price_adjust.rename(
+        columns={'conversion_price': 'convert_price'})
+
+    # Schema: order_book_id, symbol, stock_code, bond_price, convert_price
+    df = df.set_index('order_book_id').join(df_convert_price_adjust)
+
+    df_latest_stock_price = df_latest_stock_price[[
+        'order_book_id', 'close'
+    ]].rename(columns={'close': 'stock_price'})
+    # Join with latest_stock_price to get latest stock price
+    # Schema: order_book_id, short_name, company_code, bond_price, convert_price, stock_price
+    df = df.reset_index().set_index('stock_code').join(
+        df_latest_stock_price.set_index('order_book_id'))
+
+    # Calculate convert_premium_rate
+    # Schema: order_book_id, symbol, stock_code, bond_price, convert_price, stock_price, convert_premium_rate
+    df['convert_premium_rate'] = df.bond_price / (100 / df.convert_price *
+                                                  df.stock_price) - 1
+    df = df.rename(columns={'order_book_id': 'code', 'symbol': 'short_name'})
+    return txn_day, df
