@@ -1,12 +1,14 @@
 import unittest
 import conbond
 from pathlib import Path
+from datetime import date
 
 
 class TestConbond(unittest.TestCase):
     def setUp(self):
         df_date, self.df = conbond.fetch_jqdata(
-            None, None, '%s/testdata' % Path(__file__).parent, True)
+            None, None, None, date.fromisoformat('2021-09-01'),
+            '%s/testdata' % Path(__file__).parent, True)
 
     def test_double_low(self):
         hold = set(['113033.XSHG'])

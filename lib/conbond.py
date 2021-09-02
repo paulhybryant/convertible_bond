@@ -7,7 +7,7 @@ import json
 
 
 # To use this locally, need to call auth() first
-def fetch_jqdata(jqdata, today, cache_dir, use_cache):
+def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
     df_basic_info = None
     df_latest_bond_price = None
     df_latest_stock_price = None
@@ -25,7 +25,9 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
         df_convert_price_adjust = pd.read_excel(
             os.path.join(cache_dir, 'convert_price_adjust.xlsx'))
         txn_day = df_latest_bond_price.date[0]
+        assert txn_day < today, 'Cached data should be older than %s' % today
     else:
+        jqdata.auth(username, password)
         txn_day = jqdata.get_trade_days(end_date=(today - timedelta(days=1)),
                                         count=1)[0]
         df_basic_info = jqdata.bond.run_query(
@@ -33,7 +35,8 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
         # Filter non-conbond, e.g. exchange bond
         df_basic_info = df_basic_info[df_basic_info.bond_type_id == 703013]
         # For some reason some company_code is nan
-        df_basic_info = df_basic_info[pd.notnull(df_basic_info['company_code'])]
+        df_basic_info = df_basic_info[pd.notnull(
+            df_basic_info['company_code'])]
         df_latest_bond_price = jqdata.bond.run_query(
             jqdata.query(jqdata.bond.CONBOND_DAILY_PRICE).filter(
                 jqdata.bond.CONBOND_DAILY_PRICE.date == txn_day))
@@ -74,7 +77,8 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
 
     # Filter price adjust so that the convert price is the correct one at that day
     # Using the latest one is wrong as it can be sometime newer than txn_day
-    df_convert_price_adjust['adjust_date'] = pd.to_datetime(df_convert_price_adjust['adjust_date'])
+    df_convert_price_adjust['adjust_date'] = pd.to_datetime(
+        df_convert_price_adjust['adjust_date'])
     df_convert_price_adjust = df_convert_price_adjust[
         df_convert_price_adjust['adjust_date'].dt.date <= txn_day]
     df_convert_price_adjust = df_convert_price_adjust[[

@@ -26,52 +26,42 @@ flags.DEFINE_string("txn_day",
 def main(argv):
     df_date = None  # Date of the price information
     df = None
+    username = None
+    password = None
+
+    if not FLAGS.use_cache:
+        auth_file = pathlib.Path('auth.json')
+        if not auth_file.exists():
+            logging.fatal('auth.json is missing, see README.md')
+        auth = json.load(auth_file.open('r'))
+        assert FLAGS.data_source in auth
+        assert 'username' in auth[FLAGS.data_source]
+        assert 'password' in auth[FLAGS.data_source]
 
     if FLAGS.data_source == 'jqdata':
         if not FLAGS.use_cache:
-            auth_file = pathlib.Path('auth.json')
-            if not auth_file.exists():
-                logging.fatal(
-                    'To get data from jqdata, need to put credential in auth.json under "jqdata" with key "username" and "password"'
-                )
-            auth = json.load(auth_file.open('r'))
-            assert 'jqdata' in auth
-            assert 'username' in auth['jqdata']
-            assert 'password' in auth['jqdata']
-            jqdata.auth(auth['jqdata']['username'], auth['jqdata']['password'])
-        today = date.fromisoformat(FLAGS.txn_day)
-        df_date, df = conbond.fetch_jqdata(jqdata, today, FLAGS.cache_dir,
-                                           FLAGS.use_cache)
-        assert df_date < today, 'Cached data should be older than --txn_day'
-        logging.info('Using data from date: %s' % df_date.strftime('%Y-%m-%d'))
+            username = auth[FLAGS.data_source]['username']
+            password = auth[FLAGS.data_source]['password']
+        df_date, df = conbond.fetch_jqdata(username, password, jqdata,
+                                           date.fromisoformat(FLAGS.txn_day),
+                                           FLAGS.cache_dir, FLAGS.use_cache)
     elif FLAGS.data_source == 'jisilu':
-        # Created with
-        # var A397151C04723421F = '397151C04723421F';
-        # jslencode('username', A397151C04723421F)
-        # same for password
-        auth_file = pathlib.Path('auth.json')
-        if not auth_file.exists():
-            logging.fatal(
-                'To get data from jisilu, need to put credential in auth.json under "jisilu" with key "username" and "password"'
-            )
-        auth = json.load(auth_file.open('r'))
-        assert 'jisilu' in auth
-        assert 'username' in auth['jisilu']
-        assert 'password' in auth['jisilu']
-        with open('jisilu.js', 'r', encoding='utf8') as f:
-            source = f.read()
-        ctx = execjs.compile(source)
-        username = ctx.call('jslencode', auth['jisilu']['username'],
-                            '397151C04723421F')
-        password = ctx.call('jslencode', auth['jisilu']['password'],
-                            '397151C04723421F')
+        if not FLAGS.use_cache:
+            with open('jisilu.js', 'r', encoding='utf8') as f:
+                source = f.read()
+            key = '397151C04723421F'
+            ctx = execjs.compile(source)
+            username = ctx.call('jslencode', auth[FLAGS.data_source]['username'],
+                                key)
+            password = ctx.call('jslencode', auth[FLAGS.data_source]['password'],
+                                key)
         df_date, df = conbond.fetch_jisilu(username, password, FLAGS.cache_dir,
                                            FLAGS.use_cache)
-        logging.info('Using jisilu data from date: %s' %
-                     df_date.strftime('%Y-%m-%d'))
     else:
         raise
 
+    logging.info('Using %s data from date: %s' %
+                 (FLAGS.data_source, df_date.strftime('%Y-%m-%d')))
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
         positions = json.load(positions_file.open('r'))
