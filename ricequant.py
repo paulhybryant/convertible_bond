@@ -2,22 +2,36 @@
 import rqdatac
 from datetime import date
 from rqalpha.api import *
+import os
+
 
 def init(context):
     # rqdatac.init('license', '')
     context.top = 20
-    scheduler.run_weekly(get_candidates, tradingday=1, time_rule='before_trading')
-    scheduler.run_weekly(rebalance, tradingday=1, time_rule=market_open(minute=10))
+    scheduler.run_weekly(before_trading,
+                         tradingday=1,
+                         time_rule='before_trading')
+    #  scheduler.run_weekly(rebalance,
+                         #  tradingday=1,
+                         #  time_rule=market_open(minute=10))
+
 
 def rebalance(context, bar_dict):
     for code in context.orders['sell']:
         order_target_value(code, cach_amount=0)
     for op in ['hold', 'buy']:
         for code in context.orders[op]:
-            order_target_percent(code, 1 / 20);
+            order_target_percent(code, 1 / 20)
 
-def get_candidates(context, bar_dict):
-    df_date, df = fetch_rqdata(rqdatac, context.now, None, False)
+
+def before_trading(context, bar_dict):
+    #  logger.info(context.now.strftime('%Y-%m-%d'))
+    cache_dir = os.path.join('~/.conbond', context.now.strftime('%Y-%m-%d'))
+    #  if not os.path.exists(cache_dir):
+        #  os.mkdir(cache_dir)
+    #  else:
+        #  return
+    df_date, df = fetch_rqdata(rqdatac, context.now, cache_dir, True)
     positions = set()
     for p in context.portfolio.accounts["STOCK"].get_positions():
         positions.add(p)
@@ -27,11 +41,8 @@ def get_candidates(context, bar_dict):
             'weight_convert_premium_rate': 0.5,
             'top': context.top,
         }, positions)
-    print(candidates)
     context.orders = orders
 
-def handle_bar(context, bar_dict):
-    pass
 
 def fetch_rqdata(rqdatac, today, cache_dir, use_cache):
     df_basic_info = None
