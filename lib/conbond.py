@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 import json
 
 
-def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
+def fetch_jqdata(jqdata, today, cache_dir, use_cache):
     df_basic_info = None
     df_latest_bond_price = None
     df_latest_stock_price = None
@@ -26,7 +26,6 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
         txn_day = df_latest_bond_price.date[0]
         assert txn_day < today, 'Cached data should be older than %s' % today
     else:
-        jqdata.auth(username, password)
         txn_day = jqdata.get_trade_days(end_date=(today - timedelta(days=1)),
                                         count=1)[0]
         df_basic_info = jqdata.bond.run_query(
@@ -114,7 +113,7 @@ def fetch_jqdata(username, password, jqdata, today, cache_dir, use_cache):
     return txn_day, df
 
 
-def fetch_jisilu(user_name, password, cache_dir, use_cache):
+def fetch_jisilu(username, password, cache_dir, use_cache):
     jisilu_data = None
     txn_day = None
 
@@ -139,7 +138,7 @@ def fetch_jisilu(user_name, password, cache_dir, use_cache):
                    'net_auto_login': '1',
                    'password': password,
                    'return_url': 'https://www.jisilu.cn/',
-                   'user_name': user_name,
+                   'user_name': username,
                },
                headers=headers)
         url = 'https://www.jisilu.cn/data/cbnew/cb_list/?___jsl=LST___t=%s' % int(
@@ -189,7 +188,7 @@ def fetch_jisilu(user_name, password, cache_dir, use_cache):
     ]]
 
 
-def fetch_rqdata(username, password, rqdatac, today, cache_dir, use_cache):
+def fetch_rqdata(rqdatac, today, cache_dir, use_cache):
     df_basic_info = None
     df_latest_bond_price = None
     df_latest_stock_price = None
@@ -209,7 +208,6 @@ def fetch_rqdata(username, password, rqdatac, today, cache_dir, use_cache):
         txn_day = df_latest_bond_price.date[0]
         assert txn_day < today, 'Cached data should be older than %s' % today
     else:
-        rqdatac.init(username, password)
         txn_day = rqdatac.get_previous_trading_date(today)
         df_basic_info = rqdatac.convertible.all_instruments(
             txn_day).reset_index()

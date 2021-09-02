@@ -43,7 +43,9 @@ def main(argv):
         password = auth[FLAGS.data_source]['password']
 
     if FLAGS.data_source == 'jqdata':
-        df_date, df = conbond.fetch_jqdata(username, password, jqdata,
+        if not FLAGS.use_cache:
+            jqdata.auth(username, password)
+        df_date, df = conbond.fetch_jqdata(jqdata,
                                            date.fromisoformat(FLAGS.txn_day),
                                            FLAGS.cache_dir, FLAGS.use_cache)
     elif FLAGS.data_source == 'jisilu':
@@ -56,7 +58,9 @@ def main(argv):
         df_date, df = conbond.fetch_jisilu(username, password, FLAGS.cache_dir,
                                            FLAGS.use_cache)
     elif FLAGS.data_source == 'rqdata':
-        df_date, df = conbond.fetch_rqdata(username, password, rqdatac,
+        if not FLAGS.use_cache:
+            rqdatac.init(username, password)
+        df_date, df = conbond.fetch_rqdata(rqdatac,
                                            date.fromisoformat(FLAGS.txn_day),
                                            FLAGS.cache_dir, FLAGS.use_cache)
     else:
