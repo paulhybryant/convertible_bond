@@ -207,6 +207,7 @@ def fetch_jisilu(user_name, password, cache_dir, use_cache):
             'premium_rt': 'convert_premium_rate',
             'dblow': 'double_low'
         }).reset_index()
+    df['code'] = df['code'].astype(str)
     df['code'] = df.reset_index().apply(
         lambda row: row['code'] + '.XSHE'
         if row.company_code.startswith('sz') else row['code'] + '.XSHG',
