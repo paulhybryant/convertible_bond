@@ -2,32 +2,29 @@
 import rqdatac
 from datetime import date
 from rqalpha.api import *
-import os
 
 
 def init(context):
-    # rqdatac.init('license', '')
     context.top = 20
     scheduler.run_weekly(before_trading,
                          tradingday=1,
                          time_rule='before_trading')
-    #  scheduler.run_weekly(rebalance,
-                         #  tradingday=1,
-                         #  time_rule=market_open(minute=10))
+    scheduler.run_weekly(rebalance,
+                         tradingday=1,
+                         time_rule=market_open(minute=10))
 
 
 def rebalance(context, bar_dict):
+    logger.info("今日操作：%s" % context.orders)
     for code in context.orders['sell']:
-        order_target_precent(code, 0)
+        order_target_percent(code, 0)
     for op in ['hold', 'buy']:
         for code in context.orders[op]:
             order_target_percent(code, 1 / 20)
 
 
 def before_trading(context, bar_dict):
-    #  logger.info(context.now.strftime('%Y-%m-%d'))
-    cache_dir = os.path.join('~/.conbond', context.now.strftime('%Y-%m-%d'))
-    df_date, df = fetch_rqdata(rqdatac, context.now, cache_dir, True)
+    df_date, df = fetch_rqdata(rqdatac, context.now, None, False)
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
