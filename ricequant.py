@@ -36,7 +36,9 @@ def before_trading(context, bar_dict):
         }, positions)
     context.orders = orders
 
-
+# TODO:
+#   * 回测遇到的错误：仓位 127010.XSHE 最新价不应该为 nan.
+#     We need to filter out the bonds that has announced force_redeem.
 def fetch_rqdata(rqdatac, today, cache_dir, use_cache):
     df_basic_info = None
     df_latest_bond_price = None
