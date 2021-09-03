@@ -27,14 +27,10 @@ def rebalance(context, bar_dict):
 def before_trading(context, bar_dict):
     #  logger.info(context.now.strftime('%Y-%m-%d'))
     cache_dir = os.path.join('~/.conbond', context.now.strftime('%Y-%m-%d'))
-    #  if not os.path.exists(cache_dir):
-        #  os.mkdir(cache_dir)
-    #  else:
-        #  return
     df_date, df = fetch_rqdata(rqdatac, context.now, cache_dir, True)
     positions = set()
-    for p in context.portfolio.accounts["STOCK"].get_positions():
-        positions.add(p)
+    for p in context.portfolio.get_positions():
+        positions.add(p.order_book_id)
     candidates, orders = generate_candidates(
         df, double_low, {
             'weight_bond_price': 0.5,

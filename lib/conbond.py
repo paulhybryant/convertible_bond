@@ -47,6 +47,8 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
             jqdata.query(jqdata.bond.CONBOND_CONVERT_PRICE_ADJUST))
 
         if cache_dir:
+            if not os.path.exists(cache_dir):
+                os.mkdir(cache_dir)
             df_basic_info.to_excel(os.path.join(cache_dir, 'basic_info.xlsx'))
             df_latest_bond_price.to_excel(
                 os.path.join(cache_dir, 'latest_bond_price.xlsx'))
@@ -150,6 +152,8 @@ def fetch_jisilu(username, password, cache_dir, use_cache):
         jisilu_data['date'] = txn_day.strftime('%Y-%m-%d')
 
         if cache_dir:
+            if not os.path.exists(cache_dir):
+                os.mkdir(cache_dir)
             cache = open(os.path.join(cache_dir, 'jisilu.json'),
                          'w',
                          encoding='utf-8')
@@ -226,6 +230,8 @@ def fetch_rqdata(rqdatac, today, cache_dir, use_cache):
             end_date=txn_day).reset_index()
 
         if cache_dir:
+            if not os.path.exists(cache_dir):
+                os.mkdir(cache_dir)
             df_basic_info.to_excel(
                 os.path.join(cache_dir, 'rq_basic_info.xlsx'))
             df_latest_bond_price.to_excel(
