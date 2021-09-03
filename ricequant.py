@@ -18,7 +18,7 @@ def init(context):
 
 def rebalance(context, bar_dict):
     for code in context.orders['sell']:
-        order_target_value(code, cach_amount=0)
+        order_target_precent(code, 0)
     for op in ['hold', 'buy']:
         for code in context.orders[op]:
             order_target_percent(code, 1 / 20)
