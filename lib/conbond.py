@@ -4,6 +4,7 @@ import pandas as pd
 import requests
 from datetime import datetime, date, timedelta
 import json
+import pathlib
 
 
 def fetch_jqdata(jqdata, today, cache_dir, use_cache):
@@ -12,19 +13,27 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
     df_latest_stock_price = None
     df_convert_price_adjust = None
     txn_day = None
+    cache_path = None
+
+    if cache_dir:
+        cache_path = pathlib.Path(cache_dir).joinpath('jqdata')
+        conbond_price_path = cache_path.joinpath('conbond_daily_price')
+        stock_price_path = cache_path.joinpath('conbond_stock_daily_price')
+        conbond_price_path.mkdir(parents=True, exist_ok=True)
+        stock_price_path.mkdir(parents=True, exist_ok=True)
 
     if use_cache:
-        assert cache_dir
+        assert cache_path
+        df_trade_days = pd.read_excel(cache_path.joinpath('trade_days.xlsx'))
+        txn_day = df_trade_days.loc[df_trade_days.index[df_trade_days.trade_date == today] - 1].trade_date.tolist()[0]
         df_basic_info = pd.read_excel(
-            os.path.join(cache_dir, 'basic_info.xlsx'))
-        df_latest_bond_price = pd.read_excel(
-            os.path.join(cache_dir, 'latest_bond_price.xlsx'))
-        df_latest_stock_price = pd.read_excel(
-            os.path.join(cache_dir, 'latest_stock_price.xlsx'))
+            cache_path.joinpath('basic_info.xlsx'))
         df_convert_price_adjust = pd.read_excel(
-            os.path.join(cache_dir, 'convert_price_adjust.xlsx'))
-        txn_day = df_latest_bond_price.date[0]
-        assert txn_day < today, 'Cached data should be older than %s' % today
+           cache_path.joinpath('convert_price_adjust.xlsx'))
+        df_latest_bond_price = pd.read_excel(
+            conbond_price_path.joinpath('%s.xlsx' % txn_day))
+        df_latest_stock_price = pd.read_excel(
+            stock_price_path.joinpath('%s.xlsx' % txn_day))
     else:
         txn_day = jqdata.get_trade_days(end_date=(today - timedelta(days=1)),
                                         count=1)[0]
@@ -42,43 +51,44 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
             end_date=txn_day,
             frequency='daily',
             panel=False)
-        # TODO: Add filter here instead of later
         df_convert_price_adjust = jqdata.bond.run_query(
             jqdata.query(jqdata.bond.CONBOND_CONVERT_PRICE_ADJUST))
 
         if cache_dir:
-            if not os.path.exists(cache_dir):
-                os.mkdir(cache_dir)
-            df_basic_info.to_excel(os.path.join(cache_dir, 'basic_info.xlsx'))
-            df_latest_bond_price.to_excel(
-                os.path.join(cache_dir, 'latest_bond_price.xlsx'))
-            df_latest_stock_price.to_excel(
-                os.path.join(cache_dir, 'latest_stock_price.xlsx'))
+            df_basic_info.to_excel(
+                cache_path.joinpath('basic_info.xlsx'))
             df_convert_price_adjust.to_excel(
-                os.path.join(cache_dir, 'convert_price_adjust.xlsx'))
+                cache_path.joinpath('convert_price_adjust.xlsx'))
+            df_latest_bond_price.to_excel(
+                conbond_price_path.joinpath('%s.xlsx' % txn_day))
+            df_latest_stock_price.to_excel(
+                stock_price_path.joinpath('%s.xlsx' % txn_day))
 
-    # Data cleaning
-    # Filter non-conbond, e.g. exchange bond
-    df_basic_info = df_basic_info[df_basic_info.bond_type_id == 703013]
-    # Filter de-listed
-    df_basic_info = df_basic_info[df_basic_info.list_status_id == 301001]
+    # Convert code, company_code to string for joining
+    df_basic_info['code'] = df_basic_info.code.astype(str)
+    df_basic_info['company_code'] = df_basic_info.company_code.astype(str)
+    df_convert_price_adjust['code'] = df_convert_price_adjust.code.astype(str)
+    df_latest_bond_price['code'] = df_latest_bond_price.code.astype(str)
+    df_latest_stock_price['code'] = df_latest_stock_price.code.astype(str)
+
+    # Keep only bonds that are listed and also can be traded
+    # Some bonds are still listed, but is not traded (e.g. 2021-08-26, 123029)
+    df_latest_bond_price = df_latest_bond_price[df_latest_bond_price.close > 0]
+    df_latest_bond_price = df_latest_bond_price[[
+        'code', 'exchange_code', 'close'
+    ]].rename(columns={'close': 'bond_price'})
+
+
     df_basic_info = df_basic_info[[
         'code',
         'short_name',
         'company_code',
     ]]
-    df_latest_bond_price = df_latest_bond_price[[
-        'code', 'exchange_code', 'close'
-    ]].rename(columns={'close': 'bond_price'})
-    # Join basic_info with latest_bond_price to get close price from last transaction day
-    # Schema: code, short_name, company_code, bond_price, exchange_code
-    df = df_basic_info.set_index('code').join(
-        df_latest_bond_price.set_index('code')).reset_index()
-    # Keep only bonds that are listed and also can be traded
-    # Some bonds are still listed, but is not traded (e.g. 2021-08-26, 123029)
-    df = df[df.bond_price > 0]
 
-    # TODO: Repalce this, move it earlier
+    # Schema: code, short_name, company_code, bond_price, exchange_code
+    df = df_latest_bond_price.set_index('code').join(
+        df_basic_info.set_index('code')).reset_index()
+
     # Filter price adjust so that the convert price is the correct one at that day
     # Using the latest one is wrong as it can be sometime newer than txn_day
     df_convert_price_adjust['adjust_date'] = pd.to_datetime(
@@ -92,8 +102,6 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
         columns={'new_convert_price': 'convert_price'})
 
     # Join with convert_price_adjust to get latest convert price
-    # code in convert_price_latest is str, while code in df is int64
-    df['code'] = df.code.astype(str)
     # Schema: code, short_name, company_code, bond_price, convert_price, exchange_code
     df = df.set_index('code').join(df_convert_price_adjust)
 
@@ -115,7 +123,7 @@ def fetch_jqdata(jqdata, today, cache_dir, use_cache):
     return txn_day, df
 
 
-def fetch_jisilu(username, password, cache_dir, use_cache):
+def fetch_jisilu(jisilu, cache_dir, use_cache):
     jisilu_data = None
     txn_day = None
 
@@ -128,32 +136,14 @@ def fetch_jisilu(username, password, cache_dir, use_cache):
         txn_day = date.fromisoformat(jisilu_data['date'])
     else:
         txn_day = date.today() - timedelta(days=1)
-        headers = {
-            'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36'
-        }
-        s = requests.Session()
-        s.post('https://www.jisilu.cn/account/ajax/login_process/',
-               data={
-                   '_post_type': 'ajax',
-                   'aes': 1,
-                   'net_auto_login': '1',
-                   'password': password,
-                   'return_url': 'https://www.jisilu.cn/',
-                   'user_name': username,
-               },
-               headers=headers)
         url = 'https://www.jisilu.cn/data/cbnew/cb_list/?___jsl=LST___t=%s' % int(
             datetime.fromordinal(date.today().toordinal()).timestamp() * 1000)
         payload = {'listed': 'Y'}
-        response = s.post(url, data=payload, headers=headers)
-        # 当爬取的界面需要用户名密码登录时候，构建的请求需要包含auth字段
+        response = jisilu.post(url, data=payload)
         jisilu_data = json.loads(response.content.decode('utf-8'))
         jisilu_data['date'] = txn_day.strftime('%Y-%m-%d')
 
         if cache_dir:
-            if not os.path.exists(cache_dir):
-                os.mkdir(cache_dir)
             cache = open(os.path.join(cache_dir, 'jisilu.json'),
                          'w',
                          encoding='utf-8')
@@ -230,8 +220,6 @@ def fetch_rqdata(rqdatac, today, cache_dir, use_cache):
             end_date=txn_day).reset_index()
 
         if cache_dir:
-            if not os.path.exists(cache_dir):
-                os.mkdir(cache_dir)
             df_basic_info.to_excel(
                 os.path.join(cache_dir, 'rq_basic_info.xlsx'))
             df_latest_bond_price.to_excel(

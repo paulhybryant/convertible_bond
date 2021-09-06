@@ -30,6 +30,7 @@ def main(argv):
     df = None
     username = None
     password = None
+    cache_dir = None
 
     if not FLAGS.use_cache:
         auth_file = pathlib.Path('auth.json')
@@ -41,6 +42,8 @@ def main(argv):
         assert 'password' in auth[FLAGS.data_source]
         username = auth[FLAGS.data_source]['username']
         password = auth[FLAGS.data_source]['password']
+    else:
+        assert FLAGS.cache_dir
 
     if FLAGS.data_source == 'jqdata':
         if not FLAGS.use_cache:
@@ -55,7 +58,22 @@ def main(argv):
         ctx = execjs.compile(source)
         username = ctx.call('jslencode', username, key)
         password = ctx.call('jslencode', password, key)
-        df_date, df = conbond.fetch_jisilu(username, password, FLAGS.cache_dir,
+        headers = {
+            'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36'
+        }
+        jisilu = requests.Session()
+        jisilu.post('https://www.jisilu.cn/account/ajax/login_process/',
+               data={
+                   '_post_type': 'ajax',
+                   'aes': 1,
+                   'net_auto_login': '1',
+                   'password': password,
+                   'return_url': 'https://www.jisilu.cn/',
+                   'user_name': username,
+               },
+               headers=headers)
+        df_date, df = conbond.fetch_jisilu(jisilu, FLAGS.cache_dir,
                                            FLAGS.use_cache)
     elif FLAGS.data_source == 'rqdata':
         if not FLAGS.use_cache:
