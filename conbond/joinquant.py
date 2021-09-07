@@ -19,36 +19,33 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
 
     if cache_dir:
         cache_path = pathlib.Path(cache_dir).joinpath(
-            'jqdata', 'conbond_daily_price',
-            '%s.xlsx' % txn_day.strftime('%Y-%m-%d'))
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        pathlib.Path(cache_dir).joinpath(
-            'jqdata', 'conbond_stock_daily_price').mkdir(parents=True, exist_ok=True)
+            'jqdata', '%s' % txn_day.strftime('%Y-%m-%d'))
 
-    if cache_path.exists():
+    if cache_path and cache_path.exists():
         print('Using cached file: %s' % cache_path)
-        rpath = cache_path.parent.parent
         df_basic_info = pd.read_excel(
-            rpath.joinpath('conbond_basic_info.xlsx'))
+            cache_path.parent.joinpath('conbond_basic_info.xlsx'))
         df_convert_price_adjust = pd.read_excel(
-            rpath.joinpath('conbond_convert_price_adjust.xlsx'))
-        df_latest_bond_price = pd.read_excel(cache_path)
+            cache_path.parent.joinpath('conbond_convert_price_adjust.xlsx'))
+        df_latest_bond_price = pd.read_excel(
+            cache_path.joinpath('conbond_daily_price.xlsx'))
         df_latest_stock_price = pd.read_excel(
-            rpath.joinpath('conbond_stock_daily_price',
-                           '%s.xlsx' % txn_day.strftime('%Y-%m-%d')))
+            cache_path.joinpath('conbond_stock_daily_price.xlsx'))
     else:
         auth(username, password)
         txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price = read_data(
             today)
         if cache_path:
-            rpath = cache_path.parent.parent
-            df_basic_info.to_excel(rpath.joinpath('basic_info.xlsx'))
+            cache_path.mkdir(parents=True, exist_ok=True)
+            df_basic_info.to_excel(
+                cache_path.parent.joinpath('conbond_basic_info.xlsx'))
             df_convert_price_adjust.to_excel(
-                rpath.joinpath('convert_price_adjust.xlsx'))
-            df_latest_bond_price.to_excel(cache_path)
+                cache_path.parent.joinpath(
+                    'conbond_convert_price_adjust.xlsx'))
+            df_latest_bond_price.to_excel(
+                cache_path.joinpath('conbond_daily_price.xlsx'))
             df_latest_stock_price.to_excel(
-                rpath.joinpath('conbond_stock_daily_price',
-                               '%s.xlsx' % txn_day.strftime('%Y-%m-%d')))
+                cache_path.joinpath('conbond_stock_daily_price.xlsx'))
 
     return process(txn_day, df_basic_info, df_convert_price_adjust,
                    df_latest_bond_price, df_latest_stock_price)
@@ -72,6 +69,7 @@ def read_data(today):
         panel=False)
     df_convert_price_adjust = jqdata.bond.run_query(
         jqdata.query(jqdata.bond.CONBOND_CONVERT_PRICE_ADJUST))
+    assert (len(df_convert_price_adjust) < 5000)
     return txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price
 
 
