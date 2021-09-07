@@ -28,12 +28,10 @@ auth.json的格式如下：
 持仓信息默认放在positions.json里面
 
 ## Usage
-./main.py --nouse_cache --cache_dir=$PWD/lib/testdata --data_source=jqdata
+./main.py --cache_dir=/tmp/cache --data_source=jqdata
 
-./main.py --use_cache --cache_dir=$PWD/lib/testdata --data_soruce=jqdata
+./main.py --cache_dir=/tmp/cache --data_soruce=jqdata --txn_day=2021-08-01
 
-./main.py --nouse_cache --cache_dir=$PWD/lib/testdata --data_source=jisilu
-
-./main.py --use_cache --cache_dir=$PWD/lib/testdata --data_soruce=jisilu
+./main.py --cache_dir=/tmp/cache --data_source=jisilu
 
 ./main.py --help

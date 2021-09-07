@@ -35,6 +35,7 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
         auth(username, password)
         txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price = read_data(
             today)
+        print('Using data from: %s' % txn_day)
         if cache_path:
             cache_path.mkdir(parents=True, exist_ok=True)
             df_basic_info.to_excel(

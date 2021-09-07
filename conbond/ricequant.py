@@ -35,6 +35,7 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
         auth(username, password)
         txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price = read_data(
             today)
+        print('Using data from: %s' % txn_day)
         if cache_path:
             cache_path.mkdir(parents=True, exist_ok=True)
             df_all_instruments.to_excel(
@@ -90,8 +91,6 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     df_conversion_price = df_conversion_price[[
         'order_book_id', 'conversion_price'
     ]].groupby('order_book_id').min()
-    df_conversion_price = df_conversion_price.rename(
-        columns={'conversion_price': 'convert_price'})
 
     df = df.set_index('order_book_id').join(df_conversion_price)
 
@@ -101,7 +100,6 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     df = df.reset_index().set_index('stock_code').join(
         df_latest_stock_price.set_index('order_book_id'))
 
-    df['convert_premium_rate'] = df.bond_price / (100 / df.convert_price *
+    df['convert_premium_rate'] = df.bond_price / (100 / df.conversion_price *
                                                   df.stock_price) - 1
-    df = df.rename(columns={'order_book_id': 'code', 'symbol': 'short_name'})
     return txn_day, df

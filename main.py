@@ -10,7 +10,6 @@ from conbond import jisilu, core, joinquant, ricequant
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_bool("use_cache", False, "Use cache or not")
 flags.DEFINE_string("cache_dir", None, "Cache directory")
 flags.DEFINE_integer("top", 20, "Number of candidates")
 flags.DEFINE_string("data_source", "jqdata",
@@ -57,13 +56,12 @@ def main(argv):
             '{"current": "NONE", "NONE": {"positions": [], "orders": {}}}')
 
     logging.info('Using double_low strategy')
-    candidates, orders = core.generate_candidates(
+    orders = core.generate_orders(
         df, core.double_low, {
             'weight_bond_price': 0.5,
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
         }, set(positions[positions['current']]['positions']))
-    logging.info('Candidates:\n%s' % candidates)
     for k, v in orders.items():
         logging.info('%s: %s' % (k, v))
     confirm = input('Update positions (y/n)? ')
