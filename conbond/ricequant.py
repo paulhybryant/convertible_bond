@@ -1,56 +1,14 @@
+# -*- coding: utf-8 -*-
+from datetime import date
+import rqdatac
 import pandas as pd
-from datetime import datetime, date, timedelta
 import pathlib
 from conbond.core import previous_trade_date
-import rqdatac
 
 
-def auth(username, password):
-    rqdatac.init(username, password)
-
-
-def fetch(today=date.today(), cache_dir=None, username=None, password=None):
-    txn_day = previous_trade_date(today)
-    df_all_instruments = None
-    df_conversion_price = None
-    df_latest_bond_price = None
-    df_latest_stock_price = None
-    cache_path = None
-
-    if cache_dir:
-        cache_path = pathlib.Path(cache_dir).joinpath(
-            'rqdata', txn_day.strftime('%Y-%m-%d'))
-
-    if cache_path and cache_path.exists():
-        print('Using cached file: %s' % cache_path)
-        df_all_instruments = pd.read_excel(
-            cache_path.joinpath('all_instruments.xlsx'))
-        df_conversion_price = pd.read_excel(
-            cache_path.joinpath('conversion_price.xlsx'))
-        df_latest_bond_price = pd.read_excel(
-            cache_path.joinpath('bond_price.xlsx'))
-        df_latest_stock_price = pd.read_excel(
-            cache_path.joinpath('stock_price.xlsx'))
-    else:
-        auth(username, password)
-        txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price = read_data(
-            today)
-        print('Using data from: %s' % txn_day)
-        if cache_path:
-            cache_path.mkdir(parents=True, exist_ok=True)
-            df_all_instruments.to_excel(
-                cache_path.joinpath('all_instruments.xlsx'))
-            df_conversion_price.to_excel(
-                cache_path.joinpath('conversion_price.xlsx'))
-            df_latest_bond_price.to_excel(
-                cache_path.joinpath('bond_price.xlsx'))
-            df_latest_stock_price.to_excel(
-                cache_path.joinpath('stock_price.xlsx'))
-
-    return process(txn_day, df_all_instruments, df_conversion_price,
-                   df_latest_bond_price, df_latest_stock_price)
-
-
+# TODO:
+#   * 回测遇到的错误：仓位 127010.XSHE 最新价不应该为 nan.
+#     We need to filter out the bonds that has announced force_redeem.
 def read_data(today):
     txn_day = rqdatac.get_previous_trading_date(today)
     df_all_instruments = rqdatac.convertible.all_instruments(
@@ -103,3 +61,49 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     df['convert_premium_rate'] = df.bond_price / (100 / df.conversion_price *
                                                   df.stock_price) - 1
     return txn_day, df
+
+
+def fetch(today=date.today(), cache_dir=None, username=None, password=None):
+    txn_day = previous_trade_date(today)
+    df_all_instruments = None
+    df_conversion_price = None
+    df_latest_bond_price = None
+    df_latest_stock_price = None
+    cache_path = None
+
+    if cache_dir:
+        cache_path = pathlib.Path(cache_dir).joinpath(
+            'rqdata', txn_day.strftime('%Y-%m-%d'))
+
+    if cache_path and cache_path.exists():
+        print('Using cached file: %s' % cache_path)
+        df_all_instruments = pd.read_excel(
+            cache_path.joinpath('all_instruments.xlsx'))
+        df_conversion_price = pd.read_excel(
+            cache_path.joinpath('conversion_price.xlsx'))
+        df_latest_bond_price = pd.read_excel(
+            cache_path.joinpath('bond_price.xlsx'))
+        df_latest_stock_price = pd.read_excel(
+            cache_path.joinpath('stock_price.xlsx'))
+    else:
+        auth(username, password)
+        txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price = read_data(
+            today)
+        print('Using data from: %s' % txn_day)
+        if cache_path:
+            cache_path.mkdir(parents=True, exist_ok=True)
+            df_all_instruments.to_excel(
+                cache_path.joinpath('all_instruments.xlsx'))
+            df_conversion_price.to_excel(
+                cache_path.joinpath('conversion_price.xlsx'))
+            df_latest_bond_price.to_excel(
+                cache_path.joinpath('bond_price.xlsx'))
+            df_latest_stock_price.to_excel(
+                cache_path.joinpath('stock_price.xlsx'))
+
+    return process(txn_day, df_all_instruments, df_conversion_price,
+                   df_latest_bond_price, df_latest_stock_price)
+
+
+def auth(username, password):
+    rqdatac.init(username, password)
