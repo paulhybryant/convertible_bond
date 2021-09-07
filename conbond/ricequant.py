@@ -29,7 +29,7 @@ def read_data(today):
     return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price
 
 
-def process(txn_day, df_all_instruments, df_conversion_price,
+def process(df_all_instruments, df_conversion_price,
             df_latest_bond_price, df_latest_stock_price):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
@@ -60,7 +60,7 @@ def process(txn_day, df_all_instruments, df_conversion_price,
 
     df['convert_premium_rate'] = df.bond_price / (100 / df.conversion_price *
                                                   df.stock_price) - 1
-    return txn_day, df
+    return df
 
 
 def fetch(today=date.today(), cache_dir=None, username=None, password=None):
@@ -101,7 +101,7 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
             df_latest_stock_price.to_excel(
                 cache_path.joinpath('stock_price.xlsx'))
 
-    return process(txn_day, df_all_instruments, df_conversion_price,
+    return txn_day, process(df_all_instruments, df_conversion_price,
                    df_latest_bond_price, df_latest_stock_price)
 
 

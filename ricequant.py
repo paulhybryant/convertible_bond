@@ -27,7 +27,7 @@ def read_data(today):
     return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price
 
 
-def process(txn_day, df_all_instruments, df_conversion_price,
+def process(df_all_instruments, df_conversion_price,
             df_latest_bond_price, df_latest_stock_price):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
@@ -58,7 +58,7 @@ def process(txn_day, df_all_instruments, df_conversion_price,
 
     df['convert_premium_rate'] = df.bond_price / (100 / df.conversion_price *
                                                   df.stock_price) - 1
-    return txn_day, df
+    return df
 
 
 # config: Expect to have two keys: weight_bond_price and weight_convert_premium_rate
@@ -92,25 +92,14 @@ def generate_orders(df, strategy, strategy_config, holdings):
 
 def init(context):
     context.top = 20
-    scheduler.run_weekly(before_trading,
-                         tradingday=1,
-                         time_rule='before_trading')
     scheduler.run_weekly(rebalance,
                          tradingday=1,
                          time_rule=market_open(minute=10))
 
 
 def rebalance(context, bar_dict):
-    logger.info("今日操作：%s" % context.orders)
-    for code in context.orders['sell']:
-        order_target_percent(code, 0)
-    for op in ['hold', 'buy']:
-        for code in context.orders[op]:
-            order_target_percent(code, 1 / 20)
-
-
-def before_trading(context, bar_dict):
-    df_date, df = process(read_data(today))
+    df_date, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price = read_data(context.now)
+    df = process(df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price)
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
@@ -121,3 +110,9 @@ def before_trading(context, bar_dict):
             'top': context.top,
         }, positions)
     context.orders = orders
+    logger.info("今日操作：%s" % context.orders)
+    for code in orders['sell']:
+        order_target_percent(code, 0)
+    for op in ['hold', 'buy']:
+        for code in orders[op]:
+            order_target_percent(code, 1 / 20)
