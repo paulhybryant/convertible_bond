@@ -1,8 +1,8 @@
 import pandas as pd
 from datetime import datetime, date, timedelta
 import pathlib
-import jqdatasdk as jqdata
 from conbond.core import previous_trade_date
+import jqdatasdk as jqdata
 
 
 def auth(username, password):
@@ -12,14 +12,14 @@ def auth(username, password):
 def fetch(today=date.today(), cache_dir=None, username=None, password=None):
     txn_day = previous_trade_date(today)
     df_basic_info = None
+    df_convert_price_adjust = None
     df_latest_bond_price = None
     df_latest_stock_price = None
-    df_convert_price_adjust = None
     cache_path = None
 
     if cache_dir:
         cache_path = pathlib.Path(cache_dir).joinpath(
-            'jqdata', '%s' % txn_day.strftime('%Y-%m-%d'))
+            'jqdata', txn_day.strftime('%Y-%m-%d'))
 
     if cache_path and cache_path.exists():
         print('Using cached file: %s' % cache_path)

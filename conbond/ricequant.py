@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime, date, timedelta
 import pathlib
+from conbond.core import previous_trade_date
 import rqdatac
 
 
@@ -11,9 +12,9 @@ def auth(username, password):
 def fetch(today=date.today(), cache_dir=None, username=None, password=None):
     txn_day = previous_trade_date(today)
     df_all_instruments = None
+    df_conversion_price = None
     df_latest_bond_price = None
     df_latest_stock_price = None
-    df_conversion_price = None
     cache_path = None
 
     if cache_dir:
@@ -21,6 +22,7 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
             'rqdata', txn_day.strftime('%Y-%m-%d'))
 
     if cache_path and cache_path.exists():
+        print('Using cached file: %s' % cache_path)
         df_all_instruments = pd.read_excel(
             cache_path.joinpath('all_instruments.xlsx'))
         df_conversion_price = pd.read_excel(
