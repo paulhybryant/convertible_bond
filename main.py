@@ -38,14 +38,14 @@ def main(argv):
         df_date = date.today()
 
     if FLAGS.data_source == 'jqdata':
-        df_date, df = joinquant.fetch(df_date, FLAGS.cache_dir, username,
-                                      password)
+        joinquant.auth(username, password)
+        df_date, df = joinquant.fetch(df_date, FLAGS.cache_dir)
     elif FLAGS.data_source == 'jisilu':
         df_date, df = jisilu.fetch(df_date, FLAGS.cache_dir, username,
                                    password)
     elif FLAGS.data_source == 'rqdata':
-        df_date, df = ricequant.fetch(df_date, FLAGS.cache_dir, username,
-                                      password)
+        ricequant.auth(username, password)
+        df_date, df = ricequant.fetch(df_date, FLAGS.cache_dir)
     else:
         raise
 

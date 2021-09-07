@@ -9,7 +9,7 @@ def auth(username, password):
     jqdata.auth(username, password)
 
 
-def fetch(today=date.today(), cache_dir=None, username=None, password=None):
+def fetch(today=date.today(), cache_dir=None):
     txn_day = previous_trade_date(today)
     df_basic_info = None
     df_convert_price_adjust = None
@@ -32,7 +32,6 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
         df_latest_stock_price = pd.read_excel(
             cache_path.joinpath('conbond_stock_daily_price.xlsx'))
     else:
-        auth(username, password)
         txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price = read_data(
             today)
         print('Using data from: %s' % txn_day)

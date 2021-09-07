@@ -23,12 +23,9 @@ def main(argv):
     auth = json.loads(auth_file.open('r').read())
     username = auth['rqdata']['username']
     password = auth['rqdata']['password']
-    
+
     start_date = date.fromisoformat(FLAGS.start_date)
     end_date = date.fromisoformat(FLAGS.end_date)
-    #trading_dates = pd.read_excel('D:/conbond/trading_dates.xlsx')
-    #df = trading_dates[trading_dates.trading_date.dt.date >= start_date]
-    #df = df[df.trading_date.dt.date <= end_date]
     df = core.trade_dates(start_date, end_date)
 
     ricequant.auth(username, password)
