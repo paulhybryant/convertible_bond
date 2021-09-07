@@ -28,7 +28,11 @@ def read_data(today):
         end_date=txn_day).reset_index()
     df_call_info = rqdatac.convertible.get_call_info(
         df_all_instruments.order_book_id.tolist(),
-        end_date=txn_day).reset_index()
+        end_date=txn_day)
+    if df_call_info is not None:
+        df_call_info = df_call_info.reset_index()
+    else:
+        df_call_info = pd.DataFrame()
     df_indicators = rqdatac.convertible.get_indicators(
         df_all_instruments.order_book_id.tolist(),
         start_date=txn_day,
@@ -70,7 +74,7 @@ def process(df_all_instruments, df_conversion_price, df_latest_bond_price,
     return df
 
 
-def fetch(today=date.today(), cache_dir=None, username=None, password=None, crawl=False):
+def fetch(today=date.today(), cache_dir=None, process=True):
     txn_day = previous_trade_date(today)
     df_all_instruments = None
     df_conversion_price = None
@@ -97,7 +101,6 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None, craw
         df_call_info = pd.read_excel(cache_path.joinpath('call_info.xlsx'))
         df_indicators = pd.read_excel(cache_path.joinpath('indicators.xlsx'))
     else:
-        auth(username, password)
         txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators = read_data(
             today)
         print('Using data from: %s' % txn_day)
@@ -114,10 +117,8 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None, craw
             df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
             df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
 
-    if crawl:
-        return
-
-    return txn_day, process(df_all_instruments, df_conversion_price,
+    if process:
+        return txn_day, process(df_all_instruments, df_conversion_price,
                             df_latest_bond_price, df_latest_stock_price,
                             df_call_info, df_indicators)
 

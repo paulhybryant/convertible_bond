@@ -3,12 +3,22 @@ import importlib.resources as resources
 
 
 def previous_trade_date(today):
-    with resources.path(__package__, 'trade_days.xlsx') as f:
-        df_trade_days = pd.read_excel(f)
-    return df_trade_days.loc[df_trade_days.index[
-        df_trade_days.trade_date.dt.date < today][-1]].trade_date
+    with resources.path(__package__, 'trading_dates.xlsx') as f:
+        df_trade_dates = pd.read_excel(f)
+    return df_trade_dates.loc[df_trade_dates.index[
+        df_trade_dates.trading_date.dt.date < today][-1]].trading_date
 
 
+def trade_dates(start_date=None, end_date=None):
+    with resources.path(__package__, 'trading_dates.xlsx') as f:
+        df_trade_dates = pd.read_excel(f)
+    if start_date:
+        df_trade_dates = df_trade_dates[df_trade_dates.trading_date.dt.date >= start_date]
+    if end_date:
+        df_trade_dates = df_trade_dates[df_trade_dates.trading_date.dt.date <= end_date]
+    return df_trade_dates
+    
+    
 # config: Expect to have two keys: weight_bond_price and weight_convert_premium_rate
 # df: Expect to have a column named 'double_low', or two columns named 'bond_price' and 'convert_premium_rate'
 # index of df is the id for the bond to place order

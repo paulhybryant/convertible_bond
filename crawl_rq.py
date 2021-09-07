@@ -5,6 +5,8 @@ import pathlib
 from absl import app, flags, logging
 from datetime import date
 from conbond import ricequant
+from conbond import core
+# import pandas as pd
 
 FLAGS = flags.FLAGS
 
@@ -18,11 +20,21 @@ def main(argv):
     password = None
 
     auth_file = pathlib.Path('auth.json')
+    auth = json.loads(auth_file.open('r').read())
     username = auth['rqdata']['username']
     password = auth['rqdata']['password']
+    
+    start_date = date.fromisoformat(FLAGS.start_date)
+    end_date = date.fromisoformat(FLAGS.end_date)
+    #trading_dates = pd.read_excel('D:/conbond/trading_dates.xlsx')
+    #df = trading_dates[trading_dates.trading_date.dt.date >= start_date]
+    #df = df[df.trading_date.dt.date <= end_date]
+    df = core.trade_dates(start_date, end_date)
 
-    df_date, df = ricequant.fetch(df_date, FLAGS.cache_dir, username,
-                                      password, True)
+    ricequant.auth(username, password)
+    for df_date in df.trading_date.tolist():
+        logging.info(df_date.strftime('%Y-%m-%d'))
+        ricequant.fetch(df_date, FLAGS.cache_dir, process=False)
 
 if __name__ == "__main__":
     app.run(main)
