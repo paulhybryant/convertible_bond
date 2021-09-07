@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import json
 import pandas as pd
+import pathlib
 import pprint
 from absl import app, flags, logging
 from datetime import date, timedelta
-import jqdatasdk as jqdata
-from lib import conbond
-import execjs
-import pathlib
-import rqdatac
+from conbond import jisilu, core, joinquant, ricequant
 
 FLAGS = flags.FLAGS
 
@@ -30,62 +26,29 @@ def main(argv):
     df = None
     username = None
     password = None
-    cache_dir = None
 
-    if not FLAGS.use_cache:
-        auth_file = pathlib.Path('auth.json')
-        if not auth_file.exists():
-            logging.fatal('auth.json is missing, see README.md')
-        auth = json.load(auth_file.open('r'))
-        assert FLAGS.data_source in auth
-        assert 'username' in auth[FLAGS.data_source]
-        assert 'password' in auth[FLAGS.data_source]
-        username = auth[FLAGS.data_source]['username']
-        password = auth[FLAGS.data_source]['password']
-    else:
-        assert FLAGS.cache_dir
+    auth_file = pathlib.Path('auth.json')
+    if not auth_file.exists():
+        logging.fatal('auth.json is missing, see README.md')
+    auth = json.load(auth_file.open('r'))
+    assert FLAGS.data_source in auth
+    assert 'username' in auth[FLAGS.data_source]
+    assert 'password' in auth[FLAGS.data_source]
+    username = auth[FLAGS.data_source]['username']
+    password = auth[FLAGS.data_source]['password']
 
     if FLAGS.data_source == 'jqdata':
-        if not FLAGS.use_cache:
-            jqdata.auth(username, password)
-        df_date, df = conbond.fetch_jqdata(jqdata,
-                                           date.fromisoformat(FLAGS.txn_day),
-                                           FLAGS.cache_dir, FLAGS.use_cache)
+        df_date, df = joinquant.fetch(date.fromisoformat(FLAGS.txn_day),
+                                      FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'jisilu':
-        with open('jisilu.js', 'r', encoding='utf8') as f:
-            source = f.read()
-        key = '397151C04723421F'
-        ctx = execjs.compile(source)
-        username = ctx.call('jslencode', username, key)
-        password = ctx.call('jslencode', password, key)
-        headers = {
-            'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36'
-        }
-        jisilu = requests.Session()
-        jisilu.post('https://www.jisilu.cn/account/ajax/login_process/',
-               data={
-                   '_post_type': 'ajax',
-                   'aes': 1,
-                   'net_auto_login': '1',
-                   'password': password,
-                   'return_url': 'https://www.jisilu.cn/',
-                   'user_name': username,
-               },
-               headers=headers)
-        df_date, df = conbond.fetch_jisilu(jisilu, FLAGS.cache_dir,
-                                           FLAGS.use_cache)
+        df_date, df = jisilu.fetch(date.fromisoformat(FLAGS.txn_day),
+                                   FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'rqdata':
-        if not FLAGS.use_cache:
-            rqdatac.init(username, password)
-        df_date, df = conbond.fetch_rqdata(rqdatac,
-                                           date.fromisoformat(FLAGS.txn_day),
-                                           FLAGS.cache_dir, FLAGS.use_cache)
+        df_date, df = ricequant.fetch(date.fromisoformat(FLAGS.txn_day),
+                                      FLAGS.cache_dir, username, password)
     else:
         raise
 
-    logging.info('Using %s data from date: %s' %
-                 (FLAGS.data_source, df_date.strftime('%Y-%m-%d')))
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
         positions = json.load(positions_file.open('r'))
@@ -94,8 +57,8 @@ def main(argv):
             '{"current": "NONE", "NONE": {"positions": [], "orders": {}}}')
 
     logging.info('Using double_low strategy')
-    candidates, orders = conbond.generate_candidates(
-        df, conbond.double_low, {
+    candidates, orders = core.generate_candidates(
+        df, core.double_low, {
             'weight_bond_price': 0.5,
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
