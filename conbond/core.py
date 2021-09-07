@@ -1,9 +1,9 @@
 import pandas as pd
-import importlib.resources as pkg_resources
+import importlib.resources as resources
 
 
 def previous_trade_date(today):
-    with pkg_resources.path('conbond', 'trade_days.xlsx') as f:
+    with resources.path(__package__, 'trade_days.xlsx') as f:
         df_trade_days = pd.read_excel(f)
     return df_trade_days.loc[df_trade_days.index[
         df_trade_days.trade_date.dt.date < today][-1]].trade_date

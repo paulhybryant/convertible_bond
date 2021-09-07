@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import json
-import pandas as pd
 import pathlib
-import pprint
 from absl import app, flags, logging
-from datetime import date, timedelta
+from datetime import date
 from conbond import jisilu, core, joinquant, ricequant
 
 FLAGS = flags.FLAGS
@@ -15,9 +13,7 @@ flags.DEFINE_integer("top", 20, "Number of candidates")
 flags.DEFINE_string("data_source", "jqdata",
                     "Data source: jqdata, jisilu, rqdata")
 flags.DEFINE_string("positions", "positions.json", "File to store positions")
-flags.DEFINE_string("txn_day",
-                    date.today().strftime('%Y-%m-%d'),
-                    "Date to generate the candidates")
+flags.DEFINE_string("txn_day", None, "Date to generate the candidates")
 
 
 def main(argv):
@@ -36,15 +32,20 @@ def main(argv):
     username = auth[FLAGS.data_source]['username']
     password = auth[FLAGS.data_source]['password']
 
+    if FLAGS.txn_day:
+        df_date = date.fromisoformat(FLAGS.txn_day)
+    else:
+        df_date = date.today()
+
     if FLAGS.data_source == 'jqdata':
-        df_date, df = joinquant.fetch(date.fromisoformat(FLAGS.txn_day),
-                                      FLAGS.cache_dir, username, password)
+        df_date, df = joinquant.fetch(df_date, FLAGS.cache_dir, username,
+                                      password)
     elif FLAGS.data_source == 'jisilu':
-        df_date, df = jisilu.fetch(date.fromisoformat(FLAGS.txn_day),
-                                   FLAGS.cache_dir, username, password)
+        df_date, df = jisilu.fetch(df_date, FLAGS.cache_dir, username,
+                                   password)
     elif FLAGS.data_source == 'rqdata':
-        df_date, df = ricequant.fetch(date.fromisoformat(FLAGS.txn_day),
-                                      FLAGS.cache_dir, username, password)
+        df_date, df = ricequant.fetch(df_date, FLAGS.cache_dir, username,
+                                      password)
     else:
         raise
 

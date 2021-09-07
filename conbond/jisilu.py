@@ -5,7 +5,7 @@ import json
 import pathlib
 import execjs
 from conbond.core import previous_trade_date
-import importlib.resources as pkg_resources
+import importlib.resources as resources
 
 HEADERS = {
     'User-Agent':
@@ -15,7 +15,7 @@ HEADERS = {
 
 def auth(username, password):
     key = '397151C04723421F'
-    ctx = execjs.compile(pkg_resources.read_text('conbond', 'jisilu.js'))
+    ctx = execjs.compile(resources.read_text(__package__, 'jisilu.js'))
     s = requests.Session()
     s.post('https://www.jisilu.cn/account/ajax/login_process/',
            data={
