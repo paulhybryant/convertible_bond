@@ -11,10 +11,10 @@ def auth(username, password):
 def fetch(
         today=date.today(), cache_dir=None, username=None, password=None):
     txn_day = previous_trade_date(today)
-    df_basic_info = None
+    df_all_instruments = None
     df_latest_bond_price = None
     df_latest_stock_price = None
-    df_convert_price_adjust = None
+    df_conversion_price = None
     cache_path = None
 
     if cache_dir:
@@ -27,54 +27,54 @@ def fetch(
 
     if cache_path.exists():
         rpath = cache_path.parent.parent
-        df_basic_info = pd.read_excel(rpath.joinpath('basic_info.xlsx'))
-        df_convert_price_adjust = pd.read_excel(
+        df_all_instruments = pd.read_excel(rpath.joinpath('basic_info.xlsx'))
+        df_conversion_price = pd.read_excel(
             rpath.joinpath('convert_price_adjust.xlsx'))
         df_latest_bond_price = pd.read_excel(cache_path)
         df_latest_stock_price = pd.read_excel(
             rpath.joinpath('stock', '%s.xlsx' % txn_day.strftime('%Y-%m-%d')))
     else:
         auth(username, password)
-        txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price = read_data(
+        txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price = read_data(
             today)
         if cache_path:
             rpath = cache_path.parent.parent
-            df_basic_info.to_excel(rpath.joinpath('basic_info.xlsx'))
-            df_convert_price_adjust.to_excel(
+            df_all_instruments.to_excel(rpath.joinpath('basic_info.xlsx'))
+            df_conversion_price.to_excel(
                 rpath.joinpath('convert_price_adjust.xlsx'))
             df_latest_bond_price.to_excel(cache_path)
             df_latest_stock_price.to_excel(
                 rpath.joinpath('stock',
                                '%s.xlsx' % txn_day.strftime('%Y-%m-%d')))
 
-    return process(txn_day, df_basic_info, df_convert_price_adjust,
+    return process(txn_day, df_all_instruments, df_conversion_price,
                    df_latest_bond_price, df_latest_stock_price)
 
 
 def read_data(today):
     txn_day = rqdatac.get_previous_trading_date(today)
-    df_basic_info = rqdatac.convertible.all_instruments(txn_day).reset_index()
+    df_all_instruments = rqdatac.convertible.all_instruments(txn_day).reset_index()
     df_latest_bond_price = rqdatac.get_price(
-        df_basic_info.order_book_id.tolist(),
+        df_all_instruments.order_book_id.tolist(),
         start_date=txn_day,
         end_date=txn_day,
         frequency='1d').reset_index()
     df_latest_stock_price = rqdatac.get_price(
-        df_basic_info.stock_code.tolist(),
+        df_all_instruments.stock_code.tolist(),
         start_date=txn_day,
         end_date=txn_day,
         frequency='1d').reset_index()
-    df_convert_price_adjust = rqdatac.convertible.get_conversion_price(
-        df_basic_info.order_book_id.tolist(), end_date=txn_day).reset_index()
-    return txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price
+    df_conversion_price = rqdatac.convertible.get_conversion_price(
+        df_all_instruments.order_book_id.tolist(), end_date=txn_day).reset_index()
+    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price
 
 
-def process(txn_day, df_basic_info, df_convert_price_adjust,
+def process(txn_day, df_all_instruments, df_conversion_price,
             df_latest_bond_price, df_latest_stock_price):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
-    df_basic_info = df_basic_info[df_basic_info.bond_type == 'cb']
-    df_basic_info = df_basic_info[[
+    df_all_instruments = df_all_instruments[df_all_instruments.bond_type == 'cb']
+    df_all_instruments = df_all_instruments[[
         'order_book_id',
         'symbol',
         'stock_code',
@@ -84,17 +84,17 @@ def process(txn_day, df_basic_info, df_convert_price_adjust,
     ]].rename(columns={'close': 'bond_price'})
     # Join basic_info with latest_bond_price to get close price from last transaction day
     # Schema: code, short_name, company_code, bond_price
-    df = df_basic_info.set_index('order_book_id').join(
+    df = df_all_instruments.set_index('order_book_id').join(
         df_latest_bond_price.set_index('order_book_id')).reset_index()
 
-    df_convert_price_adjust = df_convert_price_adjust[[
+    df_conversion_price = df_conversion_price[[
         'order_book_id', 'conversion_price'
     ]].groupby('order_book_id').min()
-    df_convert_price_adjust = df_convert_price_adjust.rename(
+    df_conversion_price = df_conversion_price.rename(
         columns={'conversion_price': 'convert_price'})
 
     # Schema: order_book_id, symbol, stock_code, bond_price, convert_price
-    df = df.set_index('order_book_id').join(df_convert_price_adjust)
+    df = df.set_index('order_book_id').join(df_conversion_price)
 
     df_latest_stock_price = df_latest_stock_price[[
         'order_book_id', 'close'
