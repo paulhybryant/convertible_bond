@@ -26,11 +26,18 @@ def read_data(today):
     df_conversion_price = rqdatac.convertible.get_conversion_price(
         df_all_instruments.order_book_id.tolist(),
         end_date=txn_day).reset_index()
-    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price
+    df_call_info = rqdatac.convertible.get_call_info(
+        df_all_instruments.order_book_id.tolist(),
+        end_date=txn_day).reset_index()
+    df_indicators = rqdatac.convertible.get_indicators(
+        df_all_instruments.order_book_id.tolist(),
+        start_date=txn_day,
+        end_date=txn_day).reset_index()
+    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators
 
 
-def process(df_all_instruments, df_conversion_price,
-            df_latest_bond_price, df_latest_stock_price):
+def process(df_all_instruments, df_conversion_price, df_latest_bond_price,
+            df_latest_stock_price, df_call_info, df_indicators):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
     df_all_instruments = df_all_instruments[df_all_instruments.bond_type ==
@@ -63,12 +70,14 @@ def process(df_all_instruments, df_conversion_price,
     return df
 
 
-def fetch(today=date.today(), cache_dir=None, username=None, password=None):
+def fetch(today=date.today(), cache_dir=None, username=None, password=None, crawl=False):
     txn_day = previous_trade_date(today)
     df_all_instruments = None
     df_conversion_price = None
     df_latest_bond_price = None
     df_latest_stock_price = None
+    df_call_info = None
+    df_indicators = None
     cache_path = None
 
     if cache_dir:
@@ -85,9 +94,11 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
             cache_path.joinpath('bond_price.xlsx'))
         df_latest_stock_price = pd.read_excel(
             cache_path.joinpath('stock_price.xlsx'))
+        df_call_info = pd.read_excel(cache_path.joinpath('call_info.xlsx'))
+        df_indicators = pd.read_excel(cache_path.joinpath('indicators.xlsx'))
     else:
         auth(username, password)
-        txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price = read_data(
+        txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators = read_data(
             today)
         print('Using data from: %s' % txn_day)
         if cache_path:
@@ -100,9 +111,15 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
                 cache_path.joinpath('bond_price.xlsx'))
             df_latest_stock_price.to_excel(
                 cache_path.joinpath('stock_price.xlsx'))
+            df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
+            df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
+
+    if crawl:
+        return
 
     return txn_day, process(df_all_instruments, df_conversion_price,
-                   df_latest_bond_price, df_latest_stock_price)
+                            df_latest_bond_price, df_latest_stock_price,
+                            df_call_info, df_indicators)
 
 
 def auth(username, password):
