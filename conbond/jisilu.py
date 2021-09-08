@@ -4,6 +4,7 @@ from datetime import datetime, date
 import json
 import pathlib
 import execjs
+import importlib.resources as resources
 
 HEADERS = {
     'User-Agent':
@@ -76,8 +77,7 @@ def fetch(txn_day, cache_dir=None, username=None, password=None):
         lambda row: row['code'] + '.XSHE'
         if row.company_code.startswith('sz') else row['code'] + '.XSHG',
         axis=1)
-    df['code'] = df['code'].astype(str)
     return df[[
         'code', 'short_name', 'company_code', 'bond_price', 'stock_price',
         'convert_premium_rate', 'double_low'
-    ]]
+    ]].set_index('code')

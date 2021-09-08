@@ -125,5 +125,5 @@ def process(txn_day, df_basic_info, df_convert_price_adjust,
                                                   df.stock_price) - 1
 
     df['code'] = df[['code', 'exchange_code']].agg('.'.join, axis=1)
-    df = df.drop(columns=['exchange_code'])
+    df = df.drop(columns=['exchange_code']).set_index('code')
     return df
