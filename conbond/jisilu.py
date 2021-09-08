@@ -4,8 +4,6 @@ from datetime import datetime, date
 import json
 import pathlib
 import execjs
-from conbond.core import previous_trade_date
-import importlib.resources as resources
 
 HEADERS = {
     'User-Agent':
@@ -30,9 +28,8 @@ def auth(username, password):
     return s
 
 
-def fetch(today=date.today(), cache_dir=None, username=None, password=None):
+def fetch(txn_day, cache_dir=None, username=None, password=None):
     jisilu_data = None
-    txn_day = previous_trade_date(today)
     cache_path = None
 
     if cache_dir:
@@ -80,7 +77,7 @@ def fetch(today=date.today(), cache_dir=None, username=None, password=None):
         if row.company_code.startswith('sz') else row['code'] + '.XSHG',
         axis=1)
     df['code'] = df['code'].astype(str)
-    return txn_day, df[[
+    return df[[
         'code', 'short_name', 'company_code', 'bond_price', 'stock_price',
         'convert_premium_rate', 'double_low'
     ]]

@@ -1,7 +1,6 @@
 import pandas as pd
 from datetime import datetime, date, timedelta
 import pathlib
-from conbond.core import previous_trade_date
 import jqdatasdk as jqdata
 
 
@@ -9,8 +8,7 @@ def auth(username, password):
     jqdata.auth(username, password)
 
 
-def fetch(today=date.today(), cache_dir=None):
-    txn_day = previous_trade_date(today)
+def fetch(txn_day, cache_dir=None):
     df_basic_info = None
     df_convert_price_adjust = None
     df_latest_bond_price = None
@@ -32,8 +30,8 @@ def fetch(today=date.today(), cache_dir=None):
         df_latest_stock_price = pd.read_excel(
             cache_path.joinpath('conbond_stock_daily_price.xlsx'))
     else:
-        txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price = read_data(
-            today)
+        df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price = read_data(
+            txn_day)
         print('Using data from: %s' % txn_day)
         if cache_path:
             cache_path.mkdir(parents=True, exist_ok=True)
@@ -51,9 +49,7 @@ def fetch(today=date.today(), cache_dir=None):
                    df_latest_bond_price, df_latest_stock_price)
 
 
-def read_data(today):
-    txn_day = jqdata.get_trade_days(end_date=(today - timedelta(days=1)),
-                                    count=1)[0]
+def read_data(txn_day):
     df_basic_info = jqdata.bond.run_query(
         jqdata.query(jqdata.bond.CONBOND_BASIC_INFO))
     # For some reason some company_code is nan
@@ -70,7 +66,7 @@ def read_data(today):
     df_convert_price_adjust = jqdata.bond.run_query(
         jqdata.query(jqdata.bond.CONBOND_CONVERT_PRICE_ADJUST))
     assert (len(df_convert_price_adjust) < 5000)
-    return txn_day, df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price
+    return df_basic_info, df_convert_price_adjust, df_latest_bond_price, df_latest_stock_price
 
 
 def process(txn_day, df_basic_info, df_convert_price_adjust,
@@ -130,4 +126,4 @@ def process(txn_day, df_basic_info, df_convert_price_adjust,
 
     df['code'] = df[['code', 'exchange_code']].agg('.'.join, axis=1)
     df = df.drop(columns=['exchange_code'])
-    return txn_day, df
+    return df

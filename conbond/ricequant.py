@@ -3,11 +3,9 @@ from datetime import date
 import rqdatac
 import pandas as pd
 import pathlib
-from conbond.core import previous_trade_date
 
 
-def read_data(today):
-    txn_day = rqdatac.get_previous_trading_date(today)
+def read_data(txn_day):
     df_all_instruments = rqdatac.convertible.all_instruments(
         txn_day).reset_index()
     df_latest_bond_price = rqdatac.get_price(
@@ -31,7 +29,7 @@ def read_data(today):
         df_all_instruments.order_book_id.tolist(),
         start_date=txn_day,
         end_date=txn_day).reset_index()
-    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators
+    return df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators
 
 
 def process(txn_day, df_all_instruments, df_conversion_price,
@@ -74,8 +72,8 @@ def process(txn_day, df_all_instruments, df_conversion_price,
         df_call_info = df_call_info[pd.notnull(df_call_info.info_date)]
         print(df_call_info.to_string())
         if not df_call_info.empty:
-            df = df.join(df_call_info[['order_book_id',
-                                    'info_date']].set_index('order_book_id'))
+            df = df.join(df_call_info[['order_book_id', 'info_date'
+                                       ]].set_index('order_book_id'))
             # TODO: Check why, it happens on 08-20
             if df.info_date.dt.date.dtype == date:
                 df['force_redeem'] = df.info_date.dt.date < txn_day
@@ -92,8 +90,7 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     return df
 
 
-def fetch(today=date.today(), cache_dir=None, skip_process=False):
-    txn_day = previous_trade_date(today)
+def fetch(txn_day, cache_dir=None, skip_process=False):
     df_all_instruments = None
     df_conversion_price = None
     df_latest_bond_price = None
@@ -119,8 +116,8 @@ def fetch(today=date.today(), cache_dir=None, skip_process=False):
         df_call_info = pd.read_excel(cache_path.joinpath('call_info.xlsx'))
         df_indicators = pd.read_excel(cache_path.joinpath('indicators.xlsx'))
     else:
-        txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators = read_data(
-            today)
+        df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators = read_data(
+            tnx_day)
         print('Using data from: %s' % txn_day)
         if cache_path:
             cache_path.mkdir(parents=True, exist_ok=True)
@@ -136,10 +133,9 @@ def fetch(today=date.today(), cache_dir=None, skip_process=False):
             df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
 
     if not skip_process:
-        return txn_day, process(txn_day, df_all_instruments,
-                                df_conversion_price, df_latest_bond_price,
-                                df_latest_stock_price, df_call_info,
-                                df_indicators)
+        return process(txn_day, df_all_instruments, df_conversion_price,
+                       df_latest_bond_price, df_latest_stock_price,
+                       df_call_info, df_indicators)
 
 
 def auth(username, password):

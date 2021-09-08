@@ -5,15 +5,18 @@ import pathlib
 from absl import app, flags, logging
 from datetime import date
 from conbond import jisilu, core, joinquant, ricequant
+import pandas as pd
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("cache_dir", None, "Cache directory")
 flags.DEFINE_integer("top", 20, "Number of candidates")
-flags.DEFINE_string("data_source", "jqdata",
+flags.DEFINE_string("data_source", "jisilu",
                     "Data source: jqdata, jisilu, rqdata")
 flags.DEFINE_string("positions", "positions.json", "File to store positions")
-flags.DEFINE_string("txn_day", None, "Date to generate the candidates")
+flags.DEFINE_string("txn_day",
+                    date.today().strftime('%Y-%m-%d'),
+                    "Date to generate the candidates")
 
 
 def main(argv):
@@ -32,22 +35,19 @@ def main(argv):
     username = auth[FLAGS.data_source]['username']
     password = auth[FLAGS.data_source]['password']
 
-    if FLAGS.txn_day:
-        df_date = date.fromisoformat(FLAGS.txn_day)
-    else:
-        df_date = date.today()
+    df_trade_dates = pd.read_excel('trading_dates.xlsx')
+    df_date = df_trade_dates.loc[df_trade_dates.index[
+        df_trade_dates.trading_date.dt.date < date.fromisoformat(
+            FLAGS.txn_day)][-1]].trading_date
 
     if FLAGS.data_source == 'jqdata':
         joinquant.auth(username, password)
-        df_date, df = joinquant.fetch(df_date, FLAGS.cache_dir)
+        df = joinquant.fetch(df_date, FLAGS.cache_dir)
     elif FLAGS.data_source == 'jisilu':
-        df_date, df = jisilu.fetch(df_date, FLAGS.cache_dir, username,
-                                   password)
+        df = jisilu.fetch(df_date, FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
-        df_date, df = ricequant.fetch(df_date, FLAGS.cache_dir)
-    else:
-        raise
+        df = ricequant.fetch(df_date, FLAGS.cache_dir)
 
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
@@ -68,7 +68,7 @@ def main(argv):
     confirm = input('Update positions (y/n)? ')
     if confirm == 'y':
         logging.info('Updating positions')
-        positions['current'] = df_date.strftime('%Y-%m-%d')
+        positions['current'] = FLAGS.txn_day
         positions[positions['current']] = {}
         positions[positions['current']]['positions'] = candidates.code.tolist()
         positions[positions['current']]['orders'] = orders
