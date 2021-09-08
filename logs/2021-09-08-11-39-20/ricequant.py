@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import date
 import rqdatac
-from rqalpha.api import *
+import pandas as pd
 
 
 def read_data(today):
@@ -22,42 +22,68 @@ def read_data(today):
         df_all_instruments.order_book_id.tolist(),
         end_date=txn_day).reset_index()
     df_call_info = rqdatac.convertible.get_call_info(
-        df_basic_info.order_book_id.tolist()).reset_index()
-    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info
+        df_all_instruments.order_book_id.tolist(), end_date=txn_day)
+    if df_call_info is not None:
+        df_call_info = df_call_info.reset_index()
+    df_indicators = rqdatac.convertible.get_indicators(
+        df_all_instruments.order_book_id.tolist(),
+        start_date=txn_day,
+        end_date=txn_day).reset_index()
+    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators
 
 
-def process(df_all_instruments, df_conversion_price, df_latest_bond_price,
-            df_latest_stock_price, df_call_info):
+def process(txn_day, df_all_instruments, df_conversion_price,
+            df_latest_bond_price, df_latest_stock_price, df_call_info,
+            df_indicators):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
     df_all_instruments = df_all_instruments[df_all_instruments.bond_type ==
                                             'cb']
+    # Filter bonds that stopped trading by txn_day
+    df_all_instruments[
+        'stopped_trading'] = df_all_instruments.stop_trading_date.dt.date <= txn_day
+    df_all_instruments = df_all_instruments[df_all_instruments.stopped_trading
+                                            == False]
+
     df_all_instruments = df_all_instruments[[
         'order_book_id',
         'symbol',
         'stock_code',
     ]]
+
+    df_latest_stock_price = df_latest_stock_price[[
+        'order_book_id', 'close'
+    ]].rename(columns={
+        'close': 'stock_price'
+    }).set_index('order_book_id')
+    # stock_price
+    df = df_all_instruments.set_index('stock_code').join(
+        df_latest_stock_price).reset_index().set_index('order_book_id')
+
     df_latest_bond_price = df_latest_bond_price[[
         'order_book_id', 'close'
-    ]].rename(columns={'close': 'bond_price'})
-    df = df_all_instruments.set_index('order_book_id').join(
-        df_latest_bond_price.set_index('order_book_id'))
-
-    df = df.join(df_call_info[['order_book_id', 'info_date']].set_index('order_book_id'))
-
-    df = df[df.info_date.dt.date > txn_day]
+    ]].rename(columns={
+        'close': 'bond_price'
+    }).set_index('order_book_id')
+    # bond_price
+    df = df.join(df_latest_bond_price)
+    if df_call_info is not None and 'info_date' in df_call_info.columns:
+        # info_date
+        df_call_info = df_call_info[pd.notnull(df_call_info.info_date)]
+        print(df_call_info.to_string())
+        if not df_call_info.empty:
+            df = df.join(df_call_info[['order_book_id',
+                                    'info_date']].set_index('order_book_id'))
+            # TODO: Check why, it happens on 08-20
+            if df.info_date.dt.date.dtype == date:
+                df['force_redeem'] = df.info_date.dt.date < txn_day
+                df = df[df.force_redeem == False]
 
     df_conversion_price = df_conversion_price[[
         'order_book_id', 'conversion_price'
     ]].groupby('order_book_id').min()
-
-    df = df.set_index('order_book_id').join(df_conversion_price)
-
-    df_latest_stock_price = df_latest_stock_price[[
-        'order_book_id', 'close'
-    ]].rename(columns={'close': 'stock_price'})
-    df = df.reset_index().set_index('stock_code').join(
-        df_latest_stock_price.set_index('order_book_id'))
+    # conversion_price
+    df = df.join(df_conversion_price)
 
     df['convert_premium_rate'] = df.bond_price / (100 / df.conversion_price *
                                                   df.stock_price) - 1
@@ -101,10 +127,10 @@ def init(context):
 
 
 def rebalance(context, bar_dict):
-    df_date, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info = read_data(
+    df_date, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators = read_data(
         context.now)
-    df = process(df_all_instruments, df_conversion_price, df_latest_bond_price,
-                 df_latest_stock_price, df_call_info)
+    df = process(df_date, df_all_instruments, df_conversion_price, df_latest_bond_price,
+                 df_latest_stock_price, df_call_info, df_indicators)
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
@@ -114,8 +140,7 @@ def rebalance(context, bar_dict):
             'weight_convert_premium_rate': 0.5,
             'top': context.top,
         }, positions)
-    context.orders = orders
-    logger.info("今日操作：%s" % context.orders)
+    logger.info("今日操作：%s" % orders)
     for code in orders['sell']:
         order_target_percent(code, 0)
     for op in ['hold', 'buy']:
