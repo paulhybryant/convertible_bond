@@ -16,12 +16,3 @@ def double_low(df, config):
     dl = df.nsmallest(top, 'double_low')
     print(dl)
     return set(df.nsmallest(top, 'double_low').index.values.tolist())
-
-
-def generate_orders(df, strategy, strategy_config, holdings):
-    candidates = strategy(df, strategy_config)
-    orders = {}
-    orders['buy'] = list(candidates - holdings)
-    orders['sell'] = list(holdings - candidates)
-    orders['hold'] = list(holdings & candidates)
-    return orders

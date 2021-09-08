@@ -4,7 +4,7 @@ import json
 import pathlib
 from absl import app, flags, logging
 from datetime import date
-from conbond import jisilu, core, joinquant, ricequant
+from conbond import jisilu, strategy, joinquant, ricequant
 import pandas as pd
 
 FLAGS = flags.FLAGS
@@ -57,12 +57,17 @@ def main(argv):
             '{"current": "NONE", "NONE": {"positions": [], "orders": {}}}')
 
     logging.info('Using double_low strategy')
-    orders = core.generate_orders(
-        df, core.double_low, {
+    candidates = strategy.double_low(
+        df, {
             'weight_bond_price': 0.5,
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
-        }, set(positions[positions['current']]['positions']))
+        })
+    holdings = set(positions[positions['current']]['positions'])
+    orders = {}
+    orders['buy'] = list(candidates - holdings)
+    orders['sell'] = list(holdings - candidates)
+    orders['hold'] = list(holdings & candidates)
     for k, v in orders.items():
         logging.info('%s: %s' % (k, v))
     confirm = input('Update positions (y/n)? ')
