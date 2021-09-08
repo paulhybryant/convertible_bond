@@ -6,9 +6,6 @@ import pathlib
 from conbond.core import previous_trade_date
 
 
-# TODO:
-#   * 回测遇到的错误：仓位 127010.XSHE 最新价不应该为 nan.
-#     We need to filter out the bonds that has announced force_redeem.
 def read_data(today):
     txn_day = rqdatac.get_previous_trading_date(today)
     df_all_instruments = rqdatac.convertible.all_instruments(
@@ -40,7 +37,7 @@ def read_data(today):
     return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators
 
 
-def process(df_all_instruments, df_conversion_price, df_latest_bond_price,
+def process(txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price,
             df_latest_stock_price, df_call_info, df_indicators):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
@@ -55,13 +52,16 @@ def process(df_all_instruments, df_conversion_price, df_latest_bond_price,
         'order_book_id', 'close'
     ]].rename(columns={'close': 'bond_price'})
     df = df_all_instruments.set_index('order_book_id').join(
-        df_latest_bond_price.set_index('order_book_id')).reset_index()
+        df_latest_bond_price.set_index('order_book_id'))
+    df = df.join(df_call_info[['order_book_id', 'info_date']].set_index('order_book_id'))
+    df['force_redeem'] = df.info_date.dt.date < txn_day
+    df = df[df.force_redeem == False]
 
     df_conversion_price = df_conversion_price[[
         'order_book_id', 'conversion_price'
     ]].groupby('order_book_id').min()
 
-    df = df.set_index('order_book_id').join(df_conversion_price)
+    df = df.join(df_conversion_price)
 
     df_latest_stock_price = df_latest_stock_price[[
         'order_book_id', 'close'
@@ -74,7 +74,7 @@ def process(df_all_instruments, df_conversion_price, df_latest_bond_price,
     return df
 
 
-def fetch(today=date.today(), cache_dir=None, process=True):
+def fetch(today=date.today(), cache_dir=None, skip_process=False):
     txn_day = previous_trade_date(today)
     df_all_instruments = None
     df_conversion_price = None
@@ -117,8 +117,8 @@ def fetch(today=date.today(), cache_dir=None, process=True):
             df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
             df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
 
-    if process:
-        return txn_day, process(df_all_instruments, df_conversion_price,
+    if not skip_process:
+        return txn_day, process(txn_day, df_all_instruments, df_conversion_price,
                             df_latest_bond_price, df_latest_stock_price,
                             df_call_info, df_indicators)
 

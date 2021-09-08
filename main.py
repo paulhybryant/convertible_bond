@@ -49,7 +49,6 @@ def main(argv):
     else:
         raise
 
-    print(df)
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
         positions = json.load(positions_file.open('r'))

@@ -4,9 +4,6 @@ import rqdatac
 from rqalpha.api import *
 
 
-# TODO:
-#   * 回测遇到的错误：仓位 127010.XSHE 最新价不应该为 nan.
-#     We need to filter out the bonds that has announced force_redeem.
 def read_data(today):
     txn_day = rqdatac.get_previous_trading_date(today)
     df_all_instruments = rqdatac.convertible.all_instruments(
@@ -24,11 +21,13 @@ def read_data(today):
     df_conversion_price = rqdatac.convertible.get_conversion_price(
         df_all_instruments.order_book_id.tolist(),
         end_date=txn_day).reset_index()
-    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price
+    df_call_info = rqdatac.convertible.get_call_info(
+        df_basic_info.order_book_id.tolist()).reset_index()
+    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info
 
 
-def process(df_all_instruments, df_conversion_price,
-            df_latest_bond_price, df_latest_stock_price):
+def process(df_all_instruments, df_conversion_price, df_latest_bond_price,
+            df_latest_stock_price, df_call_info):
     # Data cleaning
     # Filter non-conbond, e.g. exchange bond
     df_all_instruments = df_all_instruments[df_all_instruments.bond_type ==
@@ -42,7 +41,11 @@ def process(df_all_instruments, df_conversion_price,
         'order_book_id', 'close'
     ]].rename(columns={'close': 'bond_price'})
     df = df_all_instruments.set_index('order_book_id').join(
-        df_latest_bond_price.set_index('order_book_id')).reset_index()
+        df_latest_bond_price.set_index('order_book_id'))
+
+    df = df.join(df_call_info[['order_book_id', 'info_date']].set_index('order_book_id'))
+
+    df = df[df.info_date.dt.date > txn_day]
 
     df_conversion_price = df_conversion_price[[
         'order_book_id', 'conversion_price'
@@ -98,8 +101,10 @@ def init(context):
 
 
 def rebalance(context, bar_dict):
-    df_date, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price = read_data(context.now)
-    df = process(df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price)
+    df_date, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info = read_data(
+        context.now)
+    df = process(df_all_instruments, df_conversion_price, df_latest_bond_price,
+                 df_latest_stock_price, df_call_info)
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)

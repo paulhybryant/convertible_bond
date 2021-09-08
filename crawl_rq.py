@@ -31,7 +31,7 @@ def main(argv):
     ricequant.auth(username, password)
     for df_date in df.trading_date.tolist():
         logging.info(df_date.strftime('%Y-%m-%d'))
-        ricequant.fetch(df_date, FLAGS.cache_dir, process=False)
+        ricequant.fetch(df_date, FLAGS.cache_dir, skip_process=True)
 
 if __name__ == "__main__":
     app.run(main)
