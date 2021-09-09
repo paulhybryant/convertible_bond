@@ -72,8 +72,8 @@ def process(txn_day, df_all_instruments, df_conversion_price,
         df_call_info = df_call_info[pd.notnull(df_call_info.info_date)]
         print(df_call_info.to_string())
         if not df_call_info.empty:
-            df = df.join(df_call_info[['order_book_id',
-                                    'info_date']].set_index('order_book_id'))
+            df = df.join(df_call_info[['order_book_id', 'info_date'
+                                       ]].set_index('order_book_id'))
             # TODO: Check why, it happens on 08-20
             if df.info_date.dt.date.dtype == date:
                 df['force_redeem'] = df.info_date.dt.date < txn_day
@@ -127,10 +127,11 @@ def init(context):
 
 
 def rebalance(context, bar_dict):
-    df_date, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators = read_data(
+    txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators = read_data(
         context.now)
-    df = process(df_date, df_all_instruments, df_conversion_price, df_latest_bond_price,
-                 df_latest_stock_price, df_call_info, df_indicators)
+    df = process(txn_day, df_all_instruments, df_conversion_price,
+                 df_latest_bond_price, df_latest_stock_price, df_call_info,
+                 df_indicators)
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
