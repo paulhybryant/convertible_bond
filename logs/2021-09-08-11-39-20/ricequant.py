@@ -70,7 +70,6 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     if df_call_info is not None and 'info_date' in df_call_info.columns:
         # info_date
         df_call_info = df_call_info[pd.notnull(df_call_info.info_date)]
-        print(df_call_info.to_string())
         if not df_call_info.empty:
             df = df.join(df_call_info[['order_book_id', 'info_date'
                                        ]].set_index('order_book_id'))
