@@ -34,7 +34,7 @@ def main(argv):
 
     ricequant.auth(username, password)
     for df_date in df_trading_dates.trading_date.tolist():
-        ricequant.fetch(df_date - timedelta(days=1), FLAGS.cache_dir)
+        ricequant.fetch(df_date, FLAGS.cache_dir)
 
 
 if __name__ == "__main__":

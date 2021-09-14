@@ -36,12 +36,14 @@ def fetch(txn_day, cache_dir=None):
         df_suspended = read_or_none(cache_path, 'suspended.xlsx')
 
     if df_all_instruments is None:
+        print('all_instruments')
         df_all_instruments = rqdatac.convertible.all_instruments(
             txn_day).reset_index()
         if cache_path:
             df_all_instruments.to_excel(
                 cache_path.joinpath('all_instruments.xlsx'))
     if df_latest_bond_price is None:
+        print('bond_price')
         df_latest_bond_price = rqdatac.get_price(
             df_all_instruments.order_book_id.tolist(),
             start_date=txn_day,
@@ -51,6 +53,7 @@ def fetch(txn_day, cache_dir=None):
             df_latest_bond_price.to_excel(
                 cache_path.joinpath('bond_price.xlsx'))
     if df_latest_stock_price is None:
+        print('stock_price')
         df_latest_stock_price = rqdatac.get_price(
             df_all_instruments.stock_code.tolist(),
             start_date=txn_day,
@@ -60,6 +63,7 @@ def fetch(txn_day, cache_dir=None):
             df_latest_stock_price.to_excel(
                 cache_path.joinpath('stock_price.xlsx'))
     if df_conversion_price is None:
+        print('conversion_price')
         df_conversion_price = rqdatac.convertible.get_conversion_price(
             df_all_instruments.order_book_id.tolist(),
             end_date=txn_day).reset_index()
@@ -67,13 +71,15 @@ def fetch(txn_day, cache_dir=None):
             df_conversion_price.to_excel(
                 cache_path.joinpath('conversion_price.xlsx'))
     if df_call_info is None:
+        print('call_info')
         df_call_info = rqdatac.convertible.get_call_info(
             df_all_instruments.order_book_id.tolist(), end_date=txn_day)
         if df_call_info is not None:
             df_call_info = df_call_info.reset_index()
-        if cache_path:
-            df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
+            if cache_path:
+                df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
     if df_indicators is None:
+        print('indicators')
         df_indicators = rqdatac.convertible.get_indicators(
             df_all_instruments.order_book_id.tolist(),
             start_date=txn_day,
@@ -81,6 +87,7 @@ def fetch(txn_day, cache_dir=None):
         if cache_path:
             df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
     if df_suspended is None:
+        print('suspended')
         df_suspended = rqdatac.convertible.is_suspended(
             df_all_instruments.order_book_id.tolist(),
             start_date=txn_day,
