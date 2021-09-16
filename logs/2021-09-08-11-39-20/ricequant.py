@@ -145,4 +145,4 @@ def rebalance(context, bar_dict):
         order_target_percent(code, 0)
     for op in ['hold', 'buy']:
         for code in orders[op]:
-            order_target_percent(code, 1 / 20)
+            order_target_percent(code, 1 / context.top)
