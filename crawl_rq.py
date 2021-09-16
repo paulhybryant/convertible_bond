@@ -6,6 +6,7 @@ from absl import app, flags, logging
 from datetime import date, timedelta
 from conbond import ricequant
 import pandas as pd
+from tqdm import tqdm
 
 FLAGS = flags.FLAGS
 
@@ -33,8 +34,9 @@ def main(argv):
             FLAGS.end_date)]
 
     ricequant.auth(username, password)
-    for df_date in df_trading_dates.trading_date.tolist():
-        ricequant.fetch(df_date, FLAGS.cache_dir)
+    dates = df_trading_dates.trading_date.to_list()
+    for i in tqdm(range(0, len(dates))):
+        ricequant.fetch(dates[i], FLAGS.cache_dir)
 
 
 if __name__ == "__main__":
