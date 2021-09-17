@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: conbond
+Version: 0.1.0
+Summary: Conbond backtest library
+Home-page: https://github.com/paulhybryant/convertible_bond
+Author: paulhybryant
+Author-email: paulhybryant@gmail.com
+License: Apache License v2
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+
+UNKNOWN
+
