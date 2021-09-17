@@ -73,7 +73,6 @@ def process(txn_day, df_all_instruments, df_conversion_price,
         if not df_call_info.empty:
             df = df.join(df_call_info[['order_book_id', 'info_date'
                                        ]].set_index('order_book_id'))
-            # TODO: Check why, it happens on 08-20
             if df.info_date.dt.date.dtype == date:
                 df['force_redeem'] = df.info_date.dt.date < txn_day
                 df = df[df.force_redeem == False]

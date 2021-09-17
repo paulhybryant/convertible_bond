@@ -37,13 +37,10 @@ def rq_filter_conbond(txn_day, all_instruments, call_info, suspended):
         if not call_info.empty:
             df = df.join(call_info[['order_book_id',
                                     'info_date']].set_index('order_book_id'))
-            # TODO: Check why, it happens on 08-20
             if df.info_date.dt.date.dtype == date:
                 df['force_redeem'] = df.info_date.dt.date < txn_day
                 df = df[df.force_redeem == False]
 
-    # TODO: Filter Q bond
-    # TODO: Filter suspended
     return df[['order_book_id', 'symbol', 'stock_code']]
 
 

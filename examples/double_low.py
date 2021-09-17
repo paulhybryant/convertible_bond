@@ -14,7 +14,7 @@ import pathlib
 
 config = {
     'base': {
-        'start_date': '2018-01-03',
+        'start_date': '2019-09-23',
         'end_date': '2021-09-01',
         'accounts': {
             'stock': 1000000
@@ -118,7 +118,6 @@ def rebalance(context, bar_dict):
 
     for order in orders:
         if order is not None:
-            # TODO: Convert to juejin format for analysis
             context.orders.writerow([
                 order.order_book_id,
                 str(order.side),

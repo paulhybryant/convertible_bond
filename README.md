@@ -58,6 +58,8 @@ Run pip install -e . in the library/ directory before running.
 
 ## TODO
 
-* 过滤已经公布强赎的转债（Done）
+* 过滤已经公布强赎的转债: 案例：2019-09-23 127010.XSHE
 * 过滤停牌转债: 2021-09-08-11-39-20/issues.txt
 * 过滤Q债（只有机构或者合格投资者可以购买）
+* Handle CallInfo not available on some dates
+* 输出Order细节到csv，转换成掘金的格式
