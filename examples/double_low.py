@@ -5,6 +5,7 @@ from datetime import date
 from rqalpha import run
 from rqalpha.api import *
 import csv
+import pathlib
 
 # A few note for this to work:
 # convertible bond is not supported by rqalpha by default
@@ -12,55 +13,59 @@ import csv
 # The instruments.pk file will need to be updated to include all the bonds' order_book_id
 
 config = {
-    "base": {
-        "start_date": "2018-01-02",
-        "end_date": "2018-02-01",
-        "accounts": {
-            "stock": 1000000
+    'base': {
+        'start_date': '2018-01-03',
+        'end_date': '2021-09-01',
+        'accounts': {
+            'stock': 1000000
         },
-        "frequency": "1d",
-        "benchmark": "000300.XSHG",
-        "strategy_file": __file__,
+        'frequency': '1d',
+        'benchmark': '000300.XSHG',
+        'strategy_file': __file__,
     },
-    "extra": {
-        "log_level": "error",
+    'extra': {
+        'log_level': 'error',
     },
-    "mod": {
-        "sys_analyser": {
-            "enabled": True,
-            # "report_save_path": ".",
-            "plot": True
+    'mod': {
+        'sys_analyser': {
+            'enabled': True,
+            # 'report_save_path': '.',
+            'plot': True
         },
-        "sys_simulation": {
-            "enabled": True,
-            # "matching_type": "last"
+        'sys_simulation': {
+            'enabled': True,
+            # 'matching_type': 'last'
         },
-        "sys_accounts": {
-            "enabled": True,
-            # "report_save_path": ".",
-            "plot": True
+        'sys_accounts': {
+            'enabled': True,
+            # 'report_save_path': '.',
+            'plot': True
         },
-        "sys_scheduler": {
-            "enabled": True,
-            # "report_save_path": ".",
-            #  "plot": True
+        'sys_scheduler': {
+            'enabled': True,
+            # 'report_save_path': '.',
+            #  'plot': True
         },
-        "sys_progress": {
-            "enabled": True,
-            "show": True,
+        'sys_progress': {
+            'enabled': True,
+            'show': True,
         },
-        "local_source": {
-            "enabled":
+        'sys_transaction_cost': {
+            'enabled': True,
+        },
+        'local_source': {
+            'enabled':
             True,
-            "lib":
-            "rqalpha_mod_local_source",
+            'lib':
+            'rqalpha_mod_local_source',
             # 其他配置参数
-            "start_date":
-            "2018-01-02",
-            "end_date":
-            "2021-09-08",
-            "data_path":
-            "/Users/yuhuang/gitrepo/convertible_bond/examples/cache/combined.xlsx",
+            'start_date':
+            '2018-01-02',
+            'end_date':
+            '2021-09-08',
+            'data_path':
+            pathlib.Path(__file__).parent.joinpath('cache', 'combined.xlsx'),
+            'data_format': 'excel',
         }
     }
 }
@@ -81,8 +86,8 @@ def rebalance(context, bar_dict):
     logger.info('Running date: %s' % context.now)
     txn_day = get_previous_trading_date(context.now)
     all_instruments, conversion_price, bond_price, stock_price, call_info, indicators, suspended = ricequant.fetch(
-        txn_day, "/Users/yuhuang/gitrepo/convertible_bond/examples/cache",
-        logger)
+        txn_day,
+        '/Users/yuhuang/gitrepo/convertible_bond/examples/cache', logger)
 
     all_instruments = strategy.rq_filter_conbond(txn_day, all_instruments,
                                                  call_info, suspended)
@@ -125,5 +130,5 @@ def rebalance(context, bar_dict):
     context.ordersf.flush()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run(config=config)
