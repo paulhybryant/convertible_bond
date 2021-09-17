@@ -12,7 +12,7 @@ def read_or_none(cache_path, f):
     return None
 
 
-def fetch(txn_day, cache_dir=None):
+def fetch(txn_day, cache_dir=None, logger=None):
     df_all_instruments = None
     df_conversion_price = None
     df_latest_bond_price = None
@@ -116,7 +116,8 @@ def fetch(txn_day, cache_dir=None):
     else:
         cached.append('suspended')
 
-    print('%s: fetched: %s' % (txn_day.strftime('%Y-%m-%d'), fetched))
+    if logger:
+        logger.info('%s: fetched: %s' % (txn_day.strftime('%Y-%m-%d'), fetched))
     return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators, df_suspended
 
 
@@ -128,8 +129,8 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     df_all_instruments = df_all_instruments[df_all_instruments.bond_type ==
                                             'cb']
     # Filter bonds that stopped trading by txn_day
-    df_all_instruments[
-        'stopped_trading'] = df_all_instruments.stop_trading_date.dt.date <= txn_day
+    df_all_instruments.loc[:,
+        ['stopped_trading']] = df_all_instruments.stop_trading_date.dt.date <= txn_day
     df_all_instruments = df_all_instruments[df_all_instruments.stopped_trading
                                             == False]
 
@@ -158,7 +159,6 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     if df_call_info is not None and 'info_date' in df_call_info.columns:
         # info_date
         df_call_info = df_call_info[pd.notnull(df_call_info.info_date)]
-        print(df_call_info.to_string())
         if not df_call_info.empty:
             df = df.join(df_call_info[['order_book_id', 'info_date'
                                        ]].set_index('order_book_id'))

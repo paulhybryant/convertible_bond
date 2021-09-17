@@ -47,7 +47,7 @@ def main(argv):
         df = jisilu.fetch(df_date, FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
-        df = ricequant.process(*(ricequant.fetch(df_date, FLAGS.cache_dir)))
+        df = ricequant.process(*(ricequant.fetch(df_date, FLAGS.cache_dir, logging)))
 
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
