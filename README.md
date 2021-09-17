@@ -43,6 +43,8 @@ auth.json的格式如下：
 
 持仓信息默认放在positions.json里面
 
+Run pip install -e . in the library/ directory before running.
+
 ## Usage
 ./main.py --cache_dir=/tmp/cache --data_source=jqdata
 

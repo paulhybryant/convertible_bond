@@ -1,6 +1,6 @@
 # config: Expect to have two keys: weight_bond_price and weight_convert_premium_rate
 # df: Expect to have a column named 'double_low', or two columns named 'bond_price' and 'convert_premium_rate'
-# index of df is the id for the bond to place order
+# index of df is the order_book_id for the bond to place orders
 def double_low(df, config):
     assert 'top' in config
     top = config['top']
@@ -14,5 +14,4 @@ def double_low(df, config):
         assert 'convert_premium_rate' in df.columns
         df['double_low'] = df.bond_price * weight_bond_price + df.convert_premium_rate * 100 * weight_convert_premium_rate
     dl = df.nsmallest(top, 'double_low')
-    print(dl)
     return set(df.nsmallest(top, 'double_low').index.values.tolist())

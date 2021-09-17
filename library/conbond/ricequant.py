@@ -129,8 +129,7 @@ def process(txn_day, df_all_instruments, df_conversion_price,
     df_all_instruments = df_all_instruments[df_all_instruments.bond_type ==
                                             'cb']
     # Filter bonds that stopped trading by txn_day
-    df_all_instruments.loc[:,
-        ['stopped_trading']] = df_all_instruments.stop_trading_date.dt.date <= txn_day
+    df_all_instruments = df_all_instruments.assign(stopped_trading=lambda row: row.stop_trading_date.dt.date <= txn_day)
     df_all_instruments = df_all_instruments[df_all_instruments.stopped_trading
                                             == False]
 
