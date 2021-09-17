@@ -47,7 +47,13 @@ def main(argv):
         df = jisilu.fetch(df_date, FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
-        df = ricequant.process(*(ricequant.fetch(df_date, FLAGS.cache_dir, logging)))
+        all_instruments, conversion_price, bond_price, stock_price, call_info, indicators, suspended = ricequant.fetch(
+            txn_day, FLAGS.cache_dir, logger)
+        all_instruments = strategy.rq_filter_conbond(txn_day, all_instruments,
+                                                     call_info, suspended)
+        df = strategy.rq_calculate_convert_premium_rate(
+            all_instruments, conversion_price, bond_price, stock_price,
+            indicators)
 
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():

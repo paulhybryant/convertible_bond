@@ -117,64 +117,9 @@ def fetch(txn_day, cache_dir=None, logger=None):
         cached.append('suspended')
 
     if logger:
-        logger.info('%s: fetched: %s' % (txn_day.strftime('%Y-%m-%d'), fetched))
+        logger.info('%s: fetched: %s' %
+                    (txn_day.strftime('%Y-%m-%d'), fetched))
     return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators, df_suspended
-
-
-def process(txn_day, df_all_instruments, df_conversion_price,
-            df_latest_bond_price, df_latest_stock_price, df_call_info,
-            df_indicators, df_suspended):
-    # Data cleaning
-    # Filter non-conbond, e.g. exchange bond
-    df_all_instruments = df_all_instruments[df_all_instruments.bond_type ==
-                                            'cb']
-    # Filter bonds that stopped trading by txn_day
-    df_all_instruments = df_all_instruments.assign(stopped_trading=lambda row: row.stop_trading_date.dt.date <= txn_day)
-    df_all_instruments = df_all_instruments[df_all_instruments.stopped_trading
-                                            == False]
-
-    df_all_instruments = df_all_instruments[[
-        'order_book_id',
-        'symbol',
-        'stock_code',
-    ]]
-
-    df_latest_stock_price = df_latest_stock_price[[
-        'order_book_id', 'close'
-    ]].rename(columns={
-        'close': 'stock_price'
-    }).set_index('order_book_id')
-    # stock_price
-    df = df_all_instruments.set_index('stock_code').join(
-        df_latest_stock_price).reset_index().set_index('order_book_id')
-
-    df_latest_bond_price = df_latest_bond_price[[
-        'order_book_id', 'close'
-    ]].rename(columns={
-        'close': 'bond_price'
-    }).set_index('order_book_id')
-    # bond_price
-    df = df.join(df_latest_bond_price)
-    if df_call_info is not None and 'info_date' in df_call_info.columns:
-        # info_date
-        df_call_info = df_call_info[pd.notnull(df_call_info.info_date)]
-        if not df_call_info.empty:
-            df = df.join(df_call_info[['order_book_id', 'info_date'
-                                       ]].set_index('order_book_id'))
-            # TODO: Check why, it happens on 08-20
-            if df.info_date.dt.date.dtype == date:
-                df['force_redeem'] = df.info_date.dt.date < txn_day
-                df = df[df.force_redeem == False]
-
-    df_conversion_price = df_conversion_price[[
-        'order_book_id', 'conversion_price'
-    ]].groupby('order_book_id').min()
-    # conversion_price
-    df = df.join(df_conversion_price)
-
-    df['convert_premium_rate'] = df.bond_price / (100 / df.conversion_price *
-                                                  df.stock_price) - 1
-    return df
 
 
 def auth(username, password):

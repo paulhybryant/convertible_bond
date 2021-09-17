@@ -13,8 +13,8 @@ import csv
 
 config = {
     "base": {
-        "start_date": "2018-01-01",
-        "end_date": "2021-09-01",
+        "start_date": "2018-08-01",
+        "end_date": "2018-09-01",
         "accounts": {
             "stock": 1000000
         },
@@ -80,8 +80,16 @@ def init(context):
 def rebalance(context, bar_dict):
     logger.info('Running date: %s' % context.now)
     txn_day = get_previous_trading_date(context.now)
-    df = ricequant.process(*(ricequant.fetch(
-        txn_day, "/Users/yuhuang/gitrepo/convertible_bond/examples/cache", logger)))
+    all_instruments, conversion_price, bond_price, stock_price, call_info, indicators, suspended = ricequant.fetch(
+        txn_day, "/Users/yuhuang/gitrepo/convertible_bond/examples/cache",
+        logger)
+
+    all_instruments = strategy.rq_filter_conbond(txn_day, all_instruments,
+                                                 call_info, suspended)
+    df = strategy.rq_calculate_convert_premium_rate(all_instruments,
+                                                    conversion_price,
+                                                    bond_price, stock_price,
+                                                    indicators)
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
@@ -107,8 +115,12 @@ def rebalance(context, bar_dict):
         if order is not None:
             # TODO: Convert to juejin format for analysis
             context.orders.writerow([
-                order.order_book_id, str(order.side), str(order.position_effect),
-                str(order.avg_price), str(order.filled_quantity), str(order.datetime)
+                order.order_book_id,
+                str(order.side),
+                str(order.position_effect),
+                str(order.avg_price),
+                str(order.filled_quantity),
+                str(order.datetime)
             ])
     context.ordersf.flush()
 
