@@ -119,7 +119,7 @@ def fetch(txn_day, cache_dir=None, logger=None):
     if logger:
         logger.info('%s: fetched: %s' %
                     (txn_day.strftime('%Y-%m-%d'), fetched))
-    return txn_day, df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators, df_suspended
+    return df_all_instruments, df_conversion_price, df_latest_bond_price, df_latest_stock_price, df_call_info, df_indicators, df_suspended
 
 
 def auth(username, password):

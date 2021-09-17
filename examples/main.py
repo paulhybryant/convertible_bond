@@ -48,8 +48,8 @@ def main(argv):
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
         all_instruments, conversion_price, bond_price, stock_price, call_info, indicators, suspended = ricequant.fetch(
-            txn_day, FLAGS.cache_dir, logger)
-        all_instruments = strategy.rq_filter_conbond(txn_day, all_instruments,
+            df_date, FLAGS.cache_dir, logging)
+        all_instruments = strategy.rq_filter_conbond(df_date, all_instruments,
                                                      call_info, suspended)
         df = strategy.rq_calculate_convert_premium_rate(
             all_instruments, conversion_price, bond_price, stock_price,

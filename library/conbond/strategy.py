@@ -1,3 +1,7 @@
+import pandas as pd
+from datetime import date
+
+
 # config: Expect to have two keys: weight_bond_price and weight_convert_premium_rate
 # df: Expect to have a column named 'double_low', or two columns named 'bond_price' and 'convert_premium_rate'
 # index of df is the order_book_id for the bond to place orders
@@ -40,13 +44,12 @@ def rq_filter_conbond(txn_day, all_instruments, call_info, suspended):
 
     # TODO: Filter Q bond
     # TODO: Filter suspended
-    return df['order_book_id', 'symbol', 'stock_code']
+    return df[['order_book_id', 'symbol', 'stock_code']]
 
 
 # Only works with data from ricequant now
 def rq_calculate_convert_premium_rate(all_instruments, conversion_price,
-                                      bond_price, stock_price, call_info,
-                                      indicators):
+                                      bond_price, stock_price, indicators):
     # Add stock_price column
     stock_price = stock_price[['order_book_id',
                                'close']].rename(columns={
