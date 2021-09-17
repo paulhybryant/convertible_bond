@@ -13,8 +13,8 @@ import csv
 
 config = {
     "base": {
-        "start_date": "2019-01-01",
-        "end_date": "2019-02-01",
+        "start_date": "2018-01-02",
+        "end_date": "2018-02-01",
         "accounts": {
             "stock": 1000000
         },
@@ -56,7 +56,7 @@ config = {
             "rqalpha_mod_local_source",
             # 其他配置参数
             "start_date":
-            "2018-12-28",
+            "2018-01-02",
             "end_date":
             "2021-09-08",
             "data_path":
