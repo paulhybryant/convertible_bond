@@ -69,7 +69,6 @@ def main(argv):
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
         })
-    print(df_candidates.to_string())
     candidates = set(df_candidates.index.values.tolist())
     holdings = set(positions[positions['current']]['positions'])
     orders = {}
