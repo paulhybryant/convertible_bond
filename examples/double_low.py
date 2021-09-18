@@ -73,7 +73,7 @@ config = {
 
 
 def init(context):
-    logging.basicConfig(filename='cache/log.txt', filemode='w')
+    logging.basicConfig(filename='cache/log.txt', filemode='w', level=logging.DEBUG)
     context.top = 20
     context.ordersf = open('cache/orders.csv', 'w')
     context.orders = csv.writer(context.ordersf)
@@ -86,6 +86,7 @@ def init(context):
 
 def rebalance(context, bar_dict):
     logger.info('Running date: %s' % context.now)
+    logging.info('Running date: %s' % context.now)
     txn_day = get_previous_trading_date(context.now)
     all_instruments, conversion_price, bond_price, stock_price, call_info, indicators, suspended = ricequant.fetch(
         txn_day,
@@ -106,7 +107,6 @@ def rebalance(context, bar_dict):
             'weight_convert_premium_rate': 0.5,
             'top': context.top,
         })
-    logging.info('%s' % context.now)
     logging.info(df_candidates.to_string())
 
     candidates = set(df_candidates.index.values.tolist())
