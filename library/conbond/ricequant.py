@@ -41,8 +41,10 @@ def fetch(txn_day, cache_dir=None, logger=None):
         df_all_instruments = rqdatac.convertible.all_instruments(
             txn_day).reset_index()
         if cache_path:
-            df_all_instruments.to_excel(
-                cache_path.joinpath('all_instruments.xlsx'))
+            #  df_all_instruments.to_excel(
+            #  cache_path.joinpath('all_instruments.xlsx'))
+            df_all_instruments.to_csv(
+                cache_path.joinpath('all_instruments.csv'), index=False)
     else:
         cached.append('all_instruments')
 
@@ -54,8 +56,10 @@ def fetch(txn_day, cache_dir=None, logger=None):
             end_date=txn_day,
             frequency='1d').reset_index()
         if cache_path:
-            df_latest_bond_price.to_excel(
-                cache_path.joinpath('bond_price.xlsx'))
+            #  df_latest_bond_price.to_excel(
+            #  cache_path.joinpath('bond_price.xlsx'))
+            df_latest_bond_price.to_csv(cache_path.joinpath('bond_price.csv'),
+                                        index=False)
     else:
         cached.append('bond_price')
 
@@ -67,8 +71,10 @@ def fetch(txn_day, cache_dir=None, logger=None):
             end_date=txn_day,
             frequency='1d').reset_index()
         if cache_path:
-            df_latest_stock_price.to_excel(
-                cache_path.joinpath('stock_price.xlsx'))
+            #  df_latest_stock_price.to_excel(
+            #  cache_path.joinpath('stock_price.xlsx'))
+            df_latest_stock_price.to_csv(
+                cache_path.joinpath('stock_price.csv'), index=False)
     else:
         cached.append('stock_price')
 
@@ -78,8 +84,10 @@ def fetch(txn_day, cache_dir=None, logger=None):
             df_all_instruments.order_book_id.tolist(),
             end_date=txn_day).reset_index()
         if cache_path:
-            df_conversion_price.to_excel(
-                cache_path.joinpath('conversion_price.xlsx'))
+            #  df_conversion_price.to_excel(
+            #  cache_path.joinpath('conversion_price.xlsx'))
+            df_conversion_price.to_csv(
+                cache_path.joinpath('conversion_price.csv'), index=False)
     else:
         cached.append('conversion_price')
 
@@ -87,10 +95,14 @@ def fetch(txn_day, cache_dir=None, logger=None):
         fetched.append('call_info')
         df_call_info = rqdatac.convertible.get_call_info(
             df_all_instruments.order_book_id.tolist(), end_date=txn_day)
-        if df_call_info is not None:
+        if df_call_info is None:
+            df_call_info = pd.DataFrame()
+        else:
             df_call_info = df_call_info.reset_index()
-            if cache_path:
-                df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
+        if cache_path:
+            #  df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
+            df_call_info.to_csv(cache_path.joinpath('call_info.csv'),
+                                index=False)
     else:
         cached.append('call_info')
 
@@ -101,7 +113,9 @@ def fetch(txn_day, cache_dir=None, logger=None):
             start_date=txn_day,
             end_date=txn_day).reset_index()
         if cache_path:
-            df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
+            #  df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
+            df_indicators.to_csv(cache_path.joinpath('indicators.csv'),
+                                 index=False)
     else:
         cached.append('indicators')
 
@@ -112,7 +126,9 @@ def fetch(txn_day, cache_dir=None, logger=None):
             start_date=txn_day,
             end_date=txn_day)
         if cache_path:
-            df_suspended.to_excel(cache_path.joinpath('suspended.xlsx'))
+            #  df_suspended.to_excel(cache_path.joinpath('suspended.xlsx'))
+            df_suspended.to_csv(cache_path.joinpath('suspended.csv'),
+                                index=False)
     else:
         cached.append('suspended')
 
