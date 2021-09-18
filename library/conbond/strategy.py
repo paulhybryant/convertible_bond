@@ -20,20 +20,28 @@ def double_low(df, config):
     return df.nsmallest(top, 'double_low')
 
 
+def low_price(df, config):
+    assert 'top' in config
+    top = config['top']
+    return df.nsmallest(top, 'bond_price')
+
+
 # Only works with data from ricequant now
 def rq_filter_conbond(txn_day, all_instruments, call_info, suspended):
     # Filter non-conbond, e.g. exchange bond
-    df = all_instruments[all_instruments.bond_type == 'cb'].set_index('order_book_id')
+    df = all_instruments[all_instruments.bond_type == 'cb'].set_index(
+        'order_book_id')
 
     # Filter bonds that stopped trading by txn_day
     #  df = df.assign(
-        #  stopped_trading=lambda row: row.stop_trading_date.dt.date <= txn_day)
+    #  stopped_trading=lambda row: row.stop_trading_date.dt.date <= txn_day)
     #  df = df[df.stopped_trading == False]
 
     # Filter force redeemed bonds
     if call_info is not None and 'info_date' in call_info.columns:
         # info_date
-        call_info = call_info[pd.notnull(call_info.info_date)].set_index('order_book_id')
+        call_info = call_info[pd.notnull(
+            call_info.info_date)].set_index('order_book_id')
         if not call_info.empty:
             df = df.join(call_info[['info_date']])
             df['force_redeem'] = df.info_date.dt.date < txn_day

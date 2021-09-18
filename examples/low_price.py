@@ -78,7 +78,7 @@ def init(context):
                         filemode='w',
                         level=logging.DEBUG)
     context.top = 20
-    context.ordersf = open('cache/double_low.csv', 'w')
+    context.ordersf = open('cache/low_price.csv', 'w')
     context.orders = csv.writer(context.ordersf)
     context.orders.writerow(
         ['symbol', 'side', 'positionEffect', 'price', 'volume', 'createdAt'])
@@ -104,12 +104,9 @@ def rebalance(context, bar_dict):
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
-    df_candidates = strategy.double_low(
-        df, {
-            'weight_bond_price': 0.5,
-            'weight_convert_premium_rate': 0.5,
-            'top': context.top,
-        })
+    df_candidates = strategy.low_price(df, {
+        'top': context.top,
+    })
     logging.info(df_candidates.to_string())
 
     candidates = set(df_candidates.index.values.tolist())
