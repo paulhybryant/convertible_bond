@@ -63,12 +63,14 @@ def main(argv):
             '{"current": "NONE", "NONE": {"positions": [], "orders": {}}}')
 
     logging.info('Using double_low strategy')
-    candidates = strategy.double_low(
+    df_candidates = strategy.double_low(
         df, {
             'weight_bond_price': 0.5,
             'weight_convert_premium_rate': 0.5,
             'top': FLAGS.top,
         })
+    print(df_candidates.to_string())
+    candidates = set(df_candidates.index.values.tolist())
     holdings = set(positions[positions['current']]['positions'])
     orders = {}
     orders['buy'] = list(candidates - holdings)

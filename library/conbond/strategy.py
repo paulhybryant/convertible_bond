@@ -17,31 +17,29 @@ def double_low(df, config):
         assert 'bond_price' in df.columns
         assert 'convert_premium_rate' in df.columns
         df['double_low'] = df.bond_price * weight_bond_price + df.convert_premium_rate * 100 * weight_convert_premium_rate
-    dl = df.nsmallest(top, 'double_low')
-    return set(df.nsmallest(top, 'double_low').index.values.tolist())
+    return df.nsmallest(top, 'double_low')
 
 
 # Only works with data from ricequant now
 def rq_filter_conbond(txn_day, all_instruments, call_info, suspended):
     # Filter non-conbond, e.g. exchange bond
-    df = all_instruments[all_instruments.bond_type == 'cb']
+    df = all_instruments[all_instruments.bond_type == 'cb'].set_index('order_book_id')
 
     # Filter bonds that stopped trading by txn_day
-    df = df.assign(
-        stopped_trading=lambda row: row.stop_trading_date.dt.date <= txn_day)
+    #  df = df.assign(
+        #  stopped_trading=lambda row: row.stop_trading_date.dt.date <= txn_day)
+    #  df = df[df.stopped_trading == False]
 
     # Filter force redeemed bonds
     if call_info is not None and 'info_date' in call_info.columns:
         # info_date
-        call_info = call_info[pd.notnull(call_info.info_date)]
+        call_info = call_info[pd.notnull(call_info.info_date)].set_index('order_book_id')
         if not call_info.empty:
-            df = df.join(call_info[['order_book_id',
-                                    'info_date']].set_index('order_book_id'))
-            if df.info_date.dt.date.dtype == date:
-                df['force_redeem'] = df.info_date.dt.date < txn_day
-                df = df[df.force_redeem == False]
+            df = df.join(call_info[['info_date']])
+            df['force_redeem'] = df.info_date.dt.date < txn_day
+            df = df[df.force_redeem == False]
 
-    return df[['order_book_id', 'symbol', 'stock_code']]
+    return df[['symbol', 'stock_code']]
 
 
 # Only works with data from ricequant now
@@ -52,7 +50,7 @@ def rq_calculate_convert_premium_rate(all_instruments, conversion_price,
                                'close']].rename(columns={
                                    'close': 'stock_price'
                                }).set_index('order_book_id')
-    df = all_instruments.set_index('stock_code').join(
+    df = all_instruments.reset_index().set_index('stock_code').join(
         stock_price).reset_index().set_index('order_book_id')
 
     # Add bond_price column

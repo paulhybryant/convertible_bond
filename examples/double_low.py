@@ -6,6 +6,7 @@ from rqalpha import run
 from rqalpha.api import *
 import csv
 import pathlib
+import logging
 
 # A few note for this to work:
 # convertible bond is not supported by rqalpha by default
@@ -64,14 +65,15 @@ config = {
             'end_date':
             '2021-09-08',
             'data_path':
-            pathlib.Path(__file__).parent.joinpath('cache', 'combined.xlsx'),
-            'data_format': 'excel',
+            pathlib.Path(__file__).parent.joinpath('cache', 'combined.csv'),
+            'data_format': 'csv',
         }
     }
 }
 
 
 def init(context):
+    logging.basicConfig(filename='cache/log.txt', filemode='w')
     context.top = 20
     context.ordersf = open('cache/orders.csv', 'w')
     context.orders = csv.writer(context.ordersf)
@@ -98,13 +100,16 @@ def rebalance(context, bar_dict):
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
-    candidates = strategy.double_low(
+    df_candidates = strategy.double_low(
         df, {
             'weight_bond_price': 0.5,
             'weight_convert_premium_rate': 0.5,
             'top': context.top,
         })
+    logging.info('%s' % context.now)
+    logging.info(df_candidates.to_string())
 
+    candidates = set(df_candidates.index.values.tolist())
     orders = []
     # 平仓
     for order_book_id in list(positions - candidates):
