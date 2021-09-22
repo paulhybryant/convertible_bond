@@ -71,3 +71,4 @@ Run pip install -e . in the library/ directory before running.
 * 输出Order细节到csv，转换成掘金的格式(Done)
 * 给回测传递参数，选择不同策略(Make conbond library strategy a mod)
 * 看能否利用起rqalpha的incremental mod
+* 有的标的有的日成交量很低，下单数量超过当日Bar的25%只会部分成交，还不知道这个如何处理
