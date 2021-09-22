@@ -21,7 +21,7 @@ def read_or_none(cache_path, f, logger, columns=[]):
 def fetch(txn_day, cache_dir=None, logger=None):
     df_all_instruments = None
     df_conversion_price = None
-    df_conversion_info = None
+    #  df_conversion_info = None
     df_latest_bond_price = None
     df_latest_stock_price = None
     df_call_info = None
@@ -41,16 +41,16 @@ def fetch(txn_day, cache_dir=None, logger=None):
                                           logger)
         df_conversion_price = read_or_none(cache_path, 'conversion_price.csv',
                                            logger)
-        df_conversion_info = read_or_none(cache_path, 'conversion_info.csv',
-                                          logger)
+        #  df_conversion_info = read_or_none(cache_path, 'conversion_info.csv',
+                                          #  logger)
         # Remove after data is cached
-        df_conversion_info = pd.DataFrame()
+        #  df_conversion_info = pd.DataFrame()
         df_latest_bond_price = read_or_none(cache_path, 'bond_price.csv',
                                             logger)
         df_latest_stock_price = read_or_none(cache_path, 'stock_price.csv',
                                              logger)
         df_call_info = read_or_none(cache_path, 'call_info.csv', logger, columns=['order_book_id', 'info_date'])
-        df_put_info = read_or_none(cache_path, 'put_info.csv', logger)
+        #  df_put_info = read_or_none(cache_path, 'put_info.csv', logger)
         # Remove after data is cached
         df_put_info = pd.DataFrame()
         df_indicators = read_or_none(cache_path, 'indicators.csv', logger)
@@ -91,13 +91,13 @@ def fetch(txn_day, cache_dir=None, logger=None):
             df_conversion_price.to_csv(
                 cache_path.joinpath('conversion_price.csv'), index=False)
 
-    if df_conversion_info is None:
-        df_conversion_info = rqdatac.convertible.get_conversion_info(
-            df_all_instruments.order_book_id.tolist(),
-            end_date=txn_day).reset_index()
-        if cache_path:
-            df_conversion_info.to_csv(
-                cache_path.joinpath('conversion_info.csv'), index=False)
+    #  if df_conversion_info is None:
+        #  df_conversion_info = rqdatac.convertible.get_conversion_info(
+            #  df_all_instruments.order_book_id.tolist(),
+            #  end_date=txn_day).reset_index()
+        #  if cache_path:
+            #  df_conversion_info.to_csv(
+                #  cache_path.joinpath('conversion_info.csv'), index=False)
 
     if df_call_info is None:
         df_call_info = rqdatac.convertible.get_call_info(
@@ -139,6 +139,8 @@ def fetch(txn_day, cache_dir=None, logger=None):
             df_suspended.to_csv(cache_path.joinpath('suspended.csv'),
                                 index=False)
 
+    df_suspended = df_suspended.transpose().rename(index=str, columns={0: 'suspended'})
+
     return populate_metrics(df_all_instruments, df_conversion_price,
                             df_latest_bond_price, df_latest_stock_price,
                             df_call_info, df_indicators, df_suspended)
@@ -171,6 +173,9 @@ def populate_metrics(all_instruments, conversion_price, bond_price,
 
     # Add columns from indicators
     df = df.join(indicators.set_index('order_book_id'))
+
+    # Add suspended column
+    df = df.join(suspended)
     return df
 
 

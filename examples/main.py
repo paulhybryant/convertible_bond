@@ -20,7 +20,7 @@ flags.DEFINE_string("txn_day",
 
 
 def main(argv):
-    df_date = None  # Date of the price information
+    df_date = date.fromisoformat(FLAGS.txn_day)
     df = None
     username = None
     password = None
@@ -35,15 +35,14 @@ def main(argv):
     username = auth[FLAGS.data_source]['username']
     password = auth[FLAGS.data_source]['password']
 
-    df_trade_dates = pd.read_excel('trading_dates.xlsx')
-    df_date = df_trade_dates.loc[df_trade_dates.index[
-        df_trade_dates.trading_date.dt.date < date.fromisoformat(
-            FLAGS.txn_day)][-1]].trading_date
-
     if FLAGS.data_source == 'jqdata':
         joinquant.auth(username, password)
         df = joinquant.fetch(df_date, FLAGS.cache_dir)
     elif FLAGS.data_source == 'jisilu':
+        df_trade_dates = pd.read_excel('trading_dates.xlsx')
+        df_date = df_trade_dates.loc[df_trade_dates.index[
+            df_trade_dates.trading_date.dt.date < date.fromisoformat(
+                FLAGS.txn_day)][-1]].trading_date
         df = jisilu.fetch(df_date, FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
@@ -63,12 +62,12 @@ def main(argv):
     df_candidates = strategy.multi_factors(
         df, {
             'factors': {
-                'bond_price': 0.0,
-                'conversion_premium': 1.0,
+                'bond_price': 0.5,
+                'conversion_premium': 0.5 * 100,
             },
             'top': FLAGS.top,
         })
-    logging.info(df_candidates)
+    logging.info(df_candidates[['symbol', 'suspended', '__rank__']])
     candidates = set(df_candidates.index.values.tolist())
     position_date = positions['current']
     holdings = set(positions[position_date]['positions'])

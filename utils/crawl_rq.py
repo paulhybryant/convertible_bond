@@ -11,12 +11,13 @@ import logging
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("cache_dir", None, "Cache directory")
+flags.DEFINE_string('cache_dir', None, 'Cache directory')
 flags.mark_flag_as_required('cache_dir')
-flags.DEFINE_string("start_date",
-                    date.today().strftime('%Y-%m-%d'), "Date to start")
-flags.DEFINE_string("end_date",
-                    date.today().strftime('%Y-%m-%d'), "Date to end")
+flags.DEFINE_string('start_date',
+                    date.today().strftime('%Y-%m-%d'), 'Date to start')
+flags.DEFINE_string('end_date',
+                    date.today().strftime('%Y-%m-%d'), 'Date to end')
+flags.DEFINE_string('auth_file', 'auth.json', 'Credential file')
 
 
 def main(argv):
@@ -41,5 +42,5 @@ def main(argv):
         ricequant.fetch(dates[i], FLAGS.cache_dir, logging)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(main)

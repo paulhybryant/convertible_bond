@@ -28,4 +28,7 @@ def rq_filter_conbond(txn_day, all_instruments):
 
     # Filter force redeemed bonds
     df = df[(df.info_date < txn_day.strftime('%Y-%m-%d')).eq(False)]
+
+    # Filter suspended bonds
+    df = df[df.suspended.eq(False)]
     return df
