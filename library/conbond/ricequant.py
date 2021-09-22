@@ -15,7 +15,6 @@ def read_or_none(cache_path, f, logger, columns=[]):
             df = pd.DataFrame(columns=columns)
         if df is not None and 'Unnamed: 0' in df.columns:
             df = df.drop(columns=['Unnamed: 0'])
-            print('Remove Unnamed 0')
             df.to_csv(p, index=False)
         return df
     else:
@@ -64,8 +63,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
         df_all_instruments = rqdatac.convertible.all_instruments(
             txn_day).reset_index()
         if cache_path:
-            #  df_all_instruments.to_excel(
-            #  cache_path.joinpath('all_instruments.xlsx'))
             df_all_instruments.to_csv(
                 cache_path.joinpath('all_instruments.csv'), index=False)
 
@@ -76,8 +73,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
             end_date=txn_day,
             frequency='1d').reset_index()
         if cache_path:
-            #  df_latest_bond_price.to_excel(
-            #  cache_path.joinpath('bond_price.xlsx'))
             df_latest_bond_price.to_csv(cache_path.joinpath('bond_price.csv'),
                                         index=False)
 
@@ -88,8 +83,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
             end_date=txn_day,
             frequency='1d').reset_index()
         if cache_path:
-            #  df_latest_stock_price.to_excel(
-            #  cache_path.joinpath('stock_price.xlsx'))
             df_latest_stock_price.to_csv(
                 cache_path.joinpath('stock_price.csv'), index=False)
 
@@ -98,8 +91,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
             df_all_instruments.order_book_id.tolist(),
             end_date=txn_day).reset_index()
         if cache_path:
-            #  df_conversion_price.to_excel(
-            #  cache_path.joinpath('conversion_price.xlsx'))
             df_conversion_price.to_csv(
                 cache_path.joinpath('conversion_price.csv'), index=False)
 
@@ -108,8 +99,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
             df_all_instruments.order_book_id.tolist(),
             end_date=txn_day).reset_index()
         if cache_path:
-            #  df_conversion_info.to_excel(
-            #  cache_path.joinpath('conversion_info.xlsx'))
             df_conversion_info.to_csv(
                 cache_path.joinpath('conversion_info.csv'), index=False)
 
@@ -121,7 +110,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
         else:
             df_call_info = df_call_info.reset_index()
         if cache_path:
-            #  df_call_info.to_excel(cache_path.joinpath('call_info.xlsx'))
             df_call_info.to_csv(cache_path.joinpath('call_info.csv'),
                                 index=False)
 
@@ -133,7 +121,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
         else:
             df_put_info = df_put_info.reset_index()
         if cache_path:
-            #  df_put_info.to_excel(cache_path.joinpath('put_info.xlsx'))
             df_put_info.to_csv(cache_path.joinpath('put_info.csv'),
                                index=False)
 
@@ -143,7 +130,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
             start_date=txn_day,
             end_date=txn_day).reset_index()
         if cache_path:
-            #  df_indicators.to_excel(cache_path.joinpath('indicators.xlsx'))
             df_indicators.to_csv(cache_path.joinpath('indicators.csv'),
                                  index=False)
 
@@ -153,7 +139,6 @@ def fetch(txn_day, cache_dir=None, logger=None):
             start_date=txn_day,
             end_date=txn_day)
         if cache_path:
-            #  df_suspended.to_excel(cache_path.joinpath('suspended.xlsx'))
             df_suspended.to_csv(cache_path.joinpath('suspended.csv'),
                                 index=False)
 
