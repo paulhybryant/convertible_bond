@@ -7,6 +7,7 @@ from rqalpha.api import *
 import csv
 import pathlib
 import logging
+import pprint
 
 # A few note for this to work:
 # convertible bond is not supported by rqalpha by default
@@ -78,7 +79,7 @@ def init(context):
                         filemode='w',
                         level=logging.DEBUG)
     context.top = 20
-    context.ordersf = open('cache/double_low.csv', 'w')
+    context.ordersf = open('cache/low_cpr.csv', 'w')
     context.orders = csv.writer(context.ordersf)
     context.orders.writerow(
         ['symbol', 'side', 'positionEffect', 'price', 'volume', 'createdAt'])
@@ -89,30 +90,27 @@ def init(context):
 
 def rebalance(context, bar_dict):
     logger.info('Running date: %s' % context.now)
-    logging.info('Running date: %s' % context.now)
-    txn_day = get_previous_trading_date(context.now)
-    all_instruments, conversion_price, bond_price, stock_price, call_info, indicators, suspended = ricequant.fetch(
-        txn_day, '/Users/yuhuang/gitrepo/convertible_bond/examples/cache',
-        logger)
+    all_instruments = ricequant.fetch(
+        context.now,
+        cache_dir='/Users/yuhuang/gitrepo/convertible_bond/examples/cache',
+        logger=logging)
 
-    all_instruments = strategy.rq_filter_conbond(txn_day, all_instruments,
-                                                 call_info, suspended)
-    df = strategy.rq_calculate_convert_premium_rate(all_instruments,
-                                                    conversion_price,
-                                                    bond_price, stock_price,
-                                                    indicators)
+    df = strategy.rq_filter_conbond(context.now, all_instruments)
+    df_candidates = strategy.multi_factors(
+        df, {
+            'factors': {
+                'bond_price': 0.0,
+                'conversion_premium': 1.0,
+            },
+            'top': context.top,
+        })
+    logging.info('Candidates at %s:' % context.now)
+    logging.info('\n%s' % df_candidates.to_string())
+
+    candidates = set(df_candidates.index.values.tolist())
     positions = set()
     for p in context.portfolio.get_positions():
         positions.add(p.order_book_id)
-    df_candidates = strategy.double_low(
-        df, {
-            'weight_bond_price': 0.5,
-            'weight_convert_premium_rate': 0.5,
-            'top': context.top,
-        })
-    logging.info(df_candidates.to_string())
-
-    candidates = set(df_candidates.index.values.tolist())
     orders = []
     # 平仓
     for order_book_id in list(positions - candidates):
@@ -126,15 +124,20 @@ def rebalance(context, bar_dict):
 
     for order in orders:
         if order is not None:
+            logging.info(order)
+            if order.status != ORDER_STATUS.FILLED:
+                logging.error('Order error: %s' % order)
             context.orders.writerow([
-                order.order_book_id,
-                str(order.side),
-                str(order.position_effect),
+                'SZSE.%s' % order.order_book_id[:6]
+                if order.order_book_id.endswith('XSHE') else 'SHSE.%s' %
+                order.order_book_id[:6], 1 if order.side == SIDE.BUY else 2,
+                1 if order.position_effect == POSITION_EFFECT.OPEN else 2,
                 str(order.avg_price),
                 str(order.filled_quantity),
                 str(order.datetime)
             ])
     context.ordersf.flush()
+    logging.info(pprint.pformat(context.portfolio))
 
 
 if __name__ == '__main__':

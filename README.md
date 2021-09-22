@@ -61,9 +61,13 @@ Run pip install -e . in the library/ directory before running.
 
 ## TODO
 
-* 过滤已经公布强赎的转债: 案例：2019-09-23 127010.XSHE (Done)
+* 过滤已经公布强赎的转债
+  * 案例：2019-09-23 127010.XSHE (Done)
+  * 案例2：128060（中装转债），2020-02-08公告，规模低于3000万，02-13开始停止交易（过滤低规模转债）
 * 过滤停牌转债: 2021-09-08-11-39-20/issues.txt
 * 过滤Q债（只有机构或者合格投资者可以购买）
 * 过滤接近强赎触发的转债（强赎数数数据不知道有没有），强赎公告发布会马上导致溢价的收敛。
-* Handle CallInfo not available on some dates
-* 输出Order细节到csv，转换成掘金的格式
+* Handle call_info not available on some dates (Done)
+* 输出Order细节到csv，转换成掘金的格式(Done)
+* 给回测传递参数，选择不同策略(Make conbond library strategy a mod)
+* 看能否利用起rqalpha的incremental mod

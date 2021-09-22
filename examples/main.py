@@ -47,13 +47,10 @@ def main(argv):
         df = jisilu.fetch(df_date, FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
-        all_instruments, conversion_price, bond_price, stock_price, call_info, indicators, suspended = ricequant.fetch(
-            df_date, FLAGS.cache_dir, logging)
-        all_instruments = strategy.rq_filter_conbond(df_date, all_instruments,
-                                                     call_info, suspended)
-        df = strategy.rq_calculate_convert_premium_rate(
-            all_instruments, conversion_price, bond_price, stock_price,
-            indicators)
+        all_instruments = ricequant.fetch(df_date,
+                                          cache_dir=FLAGS.cache_dir,
+                                          logger=logging)
+        df = strategy.rq_filter_conbond(df_date, all_instruments)
 
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
@@ -62,15 +59,19 @@ def main(argv):
         positions = json.loads(
             '{"current": "NONE", "NONE": {"positions": [], "orders": {}}}')
 
-    logging.info('Using double_low strategy')
-    df_candidates = strategy.double_low(
+    logging.info('Using multi_factors strategy')
+    df_candidates = strategy.multi_factors(
         df, {
-            'weight_bond_price': 0.5,
-            'weight_convert_premium_rate': 0.5,
+            'factors': {
+                'bond_price': 0.0,
+                'conversion_premium': 1.0,
+            },
             'top': FLAGS.top,
         })
+    logging.info(df_candidates)
     candidates = set(df_candidates.index.values.tolist())
-    holdings = set(positions[positions['current']]['positions'])
+    position_date = positions['current']
+    holdings = set(positions[position_date]['positions'])
     orders = {}
     orders['buy'] = list(candidates - holdings)
     orders['sell'] = list(holdings - candidates)
