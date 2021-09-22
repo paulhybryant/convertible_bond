@@ -82,7 +82,7 @@ def main(argv):
         logging.info('Updating positions')
         positions['current'] = FLAGS.txn_day
         positions[positions['current']] = {}
-        positions[positions['current']]['positions'] = candidates.code.tolist()
+        positions[positions['current']]['positions'] = list(candidates)
         positions[positions['current']]['orders'] = orders
         positions_file.open('w').write(json.dumps(positions))
     else:
