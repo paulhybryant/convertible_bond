@@ -8,15 +8,10 @@ import pathlib
 def read_or_none(cache_path, f, logger, columns=[]):
     p = cache_path.joinpath(f)
     if p.exists():
-        df = None
         try:
-            df = pd.read_csv(p)
+            return pd.read_csv(p)
         except pd.errors.EmptyDataError:
-            df = pd.DataFrame(columns=columns)
-        if df is not None and 'Unnamed: 0' in df.columns:
-            df = df.drop(columns=['Unnamed: 0'])
-            df.to_csv(p, index=False)
-        return df
+            return pd.DataFrame(columns=columns)
     else:
         if logger:
             logger.info('Read %s with rqdatac' % f[:-4])
@@ -48,6 +43,7 @@ def fetch(txn_day, cache_dir=None, logger=None):
                                            logger)
         df_conversion_info = read_or_none(cache_path, 'conversion_info.csv',
                                           logger)
+        # Remove after data is cached
         df_conversion_info = pd.DataFrame()
         df_latest_bond_price = read_or_none(cache_path, 'bond_price.csv',
                                             logger)
@@ -55,6 +51,7 @@ def fetch(txn_day, cache_dir=None, logger=None):
                                              logger)
         df_call_info = read_or_none(cache_path, 'call_info.csv', logger, columns=['order_book_id', 'info_date'])
         df_put_info = read_or_none(cache_path, 'put_info.csv', logger)
+        # Remove after data is cached
         df_put_info = pd.DataFrame()
         df_indicators = read_or_none(cache_path, 'indicators.csv', logger)
         df_suspended = read_or_none(cache_path, 'suspended.csv', logger)
@@ -169,7 +166,7 @@ def populate_metrics(all_instruments, conversion_price, bond_price,
                                          ]].groupby('order_book_id').min()
     df = df.join(conversion_price)
 
-    # Add info_date and force_redeem column
+    # Add info_date column
     df = df.join(call_info.set_index('order_book_id')[['info_date']])
 
     # Add columns from indicators
