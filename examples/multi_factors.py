@@ -79,7 +79,7 @@ def init(context):
                         filemode='w',
                         level=logging.DEBUG)
     context.top = 20
-    context.ordersf = open('cache/low_cpr.csv', 'w')
+    context.ordersf = open('cache/orders.csv', 'w')
     context.orders = csv.writer(context.ordersf)
     context.orders.writerow(
         ['symbol', 'side', 'positionEffect', 'price', 'volume', 'createdAt'])
@@ -90,10 +90,9 @@ def init(context):
 
 def rebalance(context, bar_dict):
     logger.info('Running date: %s' % context.now)
-    all_instruments = ricequant.fetch(
-        context.now,
-        cache_dir='/Users/yuhuang/gitrepo/convertible_bond/examples/cache',
-        logger=logging)
+    all_instruments = ricequant.fetch(context.now,
+                                      cache_dir='cache',
+                                      logger=logging)
 
     df = strategy.rq_filter_conbond(context.now, all_instruments)
     df_candidates = strategy.multi_factors(

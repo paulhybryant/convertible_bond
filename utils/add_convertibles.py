@@ -9,8 +9,9 @@ from absl import flags, app
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("infile", None, "instrument.pk")
-flags.DEFINE_string("outfile", None, "instrument_with_convertible.pk")
+flags.DEFINE_string('infile', None, 'instrument.pk')
+flags.DEFINE_string('outfile', None, 'instrument_with_convertible.pk')
+flags.DEFINE_string('auth_file', 'auth.json', 'Auth file')
 
 
 def main(argv):
@@ -41,5 +42,5 @@ def main(argv):
             pickle.dump(instruments, out, protocol=2)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(main)
