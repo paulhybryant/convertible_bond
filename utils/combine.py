@@ -23,7 +23,7 @@ def main(argv):
         if p.is_dir():
             data = pd.read_csv(p.joinpath('bond_price.csv'))
             data_set.append(data)
-    pd.concat(data_set).to_excel(cache_dir.joinpath('conbined.csv'), index=False)
+    pd.concat(data_set).to_csv(cache_dir.joinpath('combined.csv'), index=False)
 
 
 if __name__ == "__main__":
