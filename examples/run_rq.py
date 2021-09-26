@@ -41,8 +41,16 @@ def main(argv):
             'context_vars': {
                 'run_dir': run_dir.resolve(),
                 'cache_dir': FLAGS.cache_dir,
+                'strategy_config': {
+                    'factors': {
+                        'bond_price': 0.5,
+                        'conversion_premium': 0.5 * 100,
+                    },
+                    'top': 20,
+                }
             },
             'log_level': 'error',
+            'locale': 'zh_Hans_CN',
         },
         'mod': {
             'sys_analyser': {
@@ -70,7 +78,7 @@ def main(argv):
                 'enabled': True,
             },
             'incremental': {
-                'enabled': True,
+                'enabled': False,
                 'strategy_id': 'low_cpr',
                 # 是否启用 csv 保存 feeds 功能，可以设置为 MongodbRecorder
                 'recorder': 'CsvRecorder',
