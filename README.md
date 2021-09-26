@@ -63,10 +63,8 @@ Run pip install -e . in the library/ directory before running.
 
 * 过滤低规模转债: 案例：128060（中装转债），2020-02-08公告，规模低于3000万，02-13开始停止交易
 * 过滤接近强赎触发的转债（强赎数数数据不知道有没有），强赎公告发布会马上导致溢价的收敛。
-* 给回测传递参数，选择不同策略(Make conbond library strategy a mod)
-* 看能否利用起rqalpha的incremental mod
 * 有的标的有的日成交量很低，下单数量超过当日Bar的25%只会部分成交，还不知道这个如何处理
-* 用其他类的量化平台结果添加测试
+* 用其他类似的量化平台结果添加测试
 
 ## Change Log
 
@@ -85,3 +83,5 @@ Run pip install -e . in the library/ directory before running.
 * 将rqalpha的输出转换成掘金的格式
 * 用run_rq.py来运行，方便传递参数
   * ./run_rq.py --file=multi_factors.py --start_date='2021-09-01' --end_date='2021-09-23' --cache_dir='cache'
+* 给回测传递参数，选择不同策略(Make conbond library strategy a mod) (Done)
+* 看能否利用起rqalpha的incremental mod (Done)

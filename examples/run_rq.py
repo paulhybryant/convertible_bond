@@ -69,6 +69,14 @@ def main(argv):
             'sys_transaction_cost': {
                 'enabled': True,
             },
+            'incremental': {
+                'enabled': True,
+                'strategy_id': 'low_cpr',
+                # 是否启用 csv 保存 feeds 功能，可以设置为 MongodbRecorder
+                'recorder': 'CsvRecorder',
+                # 持久化数据输出文件夹
+                'persist_folder': 'cache',
+            },
             'local_source': {
                 'enabled':
                 True,
