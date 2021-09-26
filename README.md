@@ -66,7 +66,7 @@ Run pip install -e . in the library/ directory before running.
 * 给回测传递参数，选择不同策略(Make conbond library strategy a mod)
 * 看能否利用起rqalpha的incremental mod
 * 有的标的有的日成交量很低，下单数量超过当日Bar的25%只会部分成交，还不知道这个如何处理
-  * 案例：
+* 用其他类的量化平台结果添加测试
 
 ## Change Log
 
@@ -80,3 +80,8 @@ Run pip install -e . in the library/ directory before running.
 
 * 过滤停牌转债: 2021-09-08-11-39-20/issues.txt(Done)
 * 过滤Q债（只有机构或者合格投资者可以购买）(Done, 目前Q债都是EB债)
+
+### 2021-09-26
+* 将rqalpha的输出转换成掘金的格式
+* 用run_rq.py来运行，方便传递参数
+  * ./run_rq.py --file=multi_factors.py --start_date='2021-09-01' --end_date='2021-09-23' --cache_dir='cache'

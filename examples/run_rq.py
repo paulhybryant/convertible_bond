@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from datetime import date
+from datetime import datetime
 from rqalpha import run_file
 import pathlib
-import uuid
-from absl import app, flags, logging
+from absl import app, flags
+import logging
 
 FLAGS = flags.FLAGS
 
@@ -19,10 +19,14 @@ flags.mark_flag_as_required('end_date')
 
 
 def main(argv):
-    run_id = '%s-%s' % (date.today().strftime('%Y-%m-%d'), uuid.uuid1())
-    run_dir = pathlib.Path('logs').joinpath(run_id)
+    run_dir = pathlib.Path('logs').joinpath(
+        datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+    logging.info('Run dir: {0}, log: {0}/debug.log'.format(run_dir))
     run_dir.mkdir(parents=True, exist_ok=False)
-    logging.info('Run dir: %s' % run_dir)
+    logging.basicConfig(level=logging.INFO,
+                        filename='%s/debug.log' % run_dir,
+                        filemode='w',
+                        force=True)
     config = {
         'base': {
             'start_date': FLAGS.start_date,
