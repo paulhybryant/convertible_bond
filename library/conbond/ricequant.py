@@ -3,6 +3,7 @@ from datetime import date
 import rqdatac
 import pandas as pd
 import pathlib
+import numpy as np
 
 
 def read_or_none(cache_path, f, logger, columns=[]):
@@ -22,12 +23,13 @@ def fetch(txn_day, cache_dir=None, logger=None):
     df_all_instruments = None
     df_conversion_price = None
     df_conversion_info = None
-    df_latest_bond_price = None
-    df_latest_stock_price = None
     df_call_info = None
     df_put_info = None
-    df_indicators = None
+    df_rating = None
     df_suspended = None
+    df_indicators = None
+    df_latest_bond_price = None
+    df_latest_stock_price = None
     cache_path = None
 
     if logger:
@@ -44,17 +46,18 @@ def fetch(txn_day, cache_dir=None, logger=None):
         df_conversion_info = read_or_none(
             pathlib.Path(cache_dir).joinpath('rqdata'), 'conversion_info.csv',
             logger)
-        df_latest_bond_price = read_or_none(cache_path, 'bond_price.csv',
-                                            logger)
-        df_latest_stock_price = read_or_none(cache_path, 'stock_price.csv',
-                                             logger)
         df_call_info = read_or_none(cache_path,
                                     'call_info.csv',
                                     logger,
                                     columns=['order_book_id', 'info_date'])
         df_put_info = read_or_none(cache_path, 'put_info.csv', logger)
-        df_indicators = read_or_none(cache_path, 'indicators.csv', logger)
+        df_rating = read_or_none(cache_path, 'rating.csv', logger)
         df_suspended = read_or_none(cache_path, 'suspended.csv', logger)
+        df_indicators = read_or_none(cache_path, 'indicators.csv', logger)
+        df_latest_bond_price = read_or_none(cache_path, 'bond_price.csv',
+                                            logger)
+        df_latest_stock_price = read_or_none(cache_path, 'stock_price.csv',
+                                             logger)
 
     if df_all_instruments is None:
         df_all_instruments = rqdatac.convertible.all_instruments(
@@ -144,9 +147,10 @@ def fetch(txn_day, cache_dir=None, logger=None):
     df_suspended = df_suspended.transpose().rename(index=str,
                                                    columns={0: 'suspended'})
 
-    return populate_metrics(df_all_instruments, df_conversion_price,
+    df = populate_metrics(df_all_instruments, df_conversion_price,
                             df_latest_bond_price, df_latest_stock_price,
                             df_call_info, df_indicators, df_suspended)
+    return filter(txn_day, df)
 
 
 def populate_metrics(all_instruments, conversion_price, bond_price,
@@ -180,6 +184,35 @@ def populate_metrics(all_instruments, conversion_price, bond_price,
     # Add suspended column
     df = df.join(suspended)
     return df
+
+
+def filter(txn_day, all_instruments):
+    def filter_conbond(bond, txn_day=txn_day):
+        # Filter non-conbond, e.g. exchange bond
+        if bond.bond_type != 'cb':
+            return True, '非可转债'
+
+        # Filter bonds that have small remaining size (< 100,000,000)
+        # 128060, 2019-11-20, remaining_size: 105917700.0
+        if bond.remaining_size < 100000000:
+            return True, '规模小于一亿'
+
+        # Filter suspended bonds
+        if bond.suspended:
+            return True, '停牌'
+
+        # Filter force redeemed bonds
+        if bond.info_date is not np.nan and date.fromisoformat(
+                bond.info_date) <= txn_day:
+            return True, '已公告强赎'
+
+        return False, ''
+
+    all_instruments[['filtered', 'filtered_reason'
+                     ]] = all_instruments.apply(filter_conbond,
+                                                axis=1,
+                                                result_type='expand')
+    return all_instruments
 
 
 def auth(username, password):

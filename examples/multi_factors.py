@@ -5,6 +5,7 @@ from rqalpha.api import *
 import csv
 import pprint
 import logging
+import pathlib
 
 
 # A few note for this to work:
@@ -15,20 +16,29 @@ def init(context):
     scheduler.run_weekly(rebalance,
                          tradingday=1,
                          time_rule=market_open(minute=10))
+    context.written = False
+    context.candidatesf = pathlib.Path(
+        context.run_dir).joinpath('candidates.csv')
 
 
 def rebalance(context, bar_dict):
     logger.info('Rebalance date: %s' % context.now)
-    all_conbonds = ricequant.fetch(context.now,
-                                      cache_dir=context.cache_dir,
-                                      logger=logging)
-
-    df = strategy.rq_filter_conbond(context.now, all_conbonds)
+    df = ricequant.fetch(context.now,
+                         cache_dir=context.cache_dir,
+                         logger=logging)
+    logging.info('过滤标的：%s' % df[(df.bond_type == 'cb') & (df.filtered)][['symbol', 'filtered_reason']])
+    df = df[~df.filtered]
     df_candidates = strategy.multi_factors(df, context.strategy_config)
-    logging.info('Candidates at %s:' % context.now)
-    logging.info(df_candidates[[
-        'symbol', 'bond_price', 'conversion_premium', '__rank__'
-    ]].to_string())
+    df_candidates['date'] = context.now.date()
+    if context.written:
+        df_candidates[[
+            'symbol', 'bond_price', 'conversion_premium', '__rank__', 'date'
+        ]].to_csv(context.candidatesf, mode='a', header=False, index=True)
+    else:
+        df_candidates[[
+            'symbol', 'bond_price', 'conversion_premium', '__rank__', 'date'
+        ]].to_csv(context.candidatesf, mode='w', header=True, index=True)
+        context.written = True
 
     candidates = set(df_candidates.index.values.tolist())
     positions = set()

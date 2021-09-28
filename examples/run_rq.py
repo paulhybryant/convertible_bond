@@ -94,9 +94,10 @@ def main(argv):
                 'start_date':
                 '2018-01-02',
                 'end_date':
-                '2021-09-23',
+                '2021-09-24',
                 'data_path':
                 pathlib.Path(__file__).parent.joinpath(FLAGS.cache_dir,
+                                                       'rqdata',
                                                        'combined.csv'),
                 'data_format':
                 'csv',

@@ -46,10 +46,11 @@ def main(argv):
         df = jisilu.fetch(df_date, FLAGS.cache_dir, username, password)
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
-        all_instruments = ricequant.fetch(df_date,
+        df = ricequant.fetch(df_date,
                                           cache_dir=FLAGS.cache_dir,
                                           logger=logging)
-        df = strategy.rq_filter_conbond(df_date, all_instruments)
+        logging.info('过滤标的：%s' % df[(df.bond_type == 'cb') & (df.filtered)][['symbol', 'filtered_reason']])
+        df = df[~df.filtered]
 
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
@@ -67,7 +68,7 @@ def main(argv):
             },
             'top': FLAGS.top,
         })
-    logging.info(df_candidates[['symbol', 'suspended', '__rank__']])
+    logging.info(df_candidates[['symbol', 'bond_price', 'conversion_premium', '__rank__']])
     candidates = set(df_candidates.index.values.tolist())
     position_date = positions['current']
     holdings = set(positions[position_date]['positions'])
