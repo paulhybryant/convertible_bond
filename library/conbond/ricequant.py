@@ -203,7 +203,7 @@ def filter(txn_day, all_instruments):
 
         # Filter force redeemed bonds
         if bond.info_date is not np.nan and date.fromisoformat(
-                bond.info_date) <= txn_day:
+                bond.info_date) <= txn_day.date():
             return True, '已公告强赎'
 
         return False, ''
@@ -212,7 +212,7 @@ def filter(txn_day, all_instruments):
                      ]] = all_instruments.apply(filter_conbond,
                                                 axis=1,
                                                 result_type='expand')
-    return all_instruments
+    return all_instruments[all_instruments.bond_type == 'cb']
 
 
 def auth(username, password):

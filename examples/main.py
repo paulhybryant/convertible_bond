@@ -3,16 +3,15 @@
 import json
 import pathlib
 from absl import app, flags, logging
-from datetime import date
-from conbond import jisilu, strategy, joinquant, ricequant
+from datetime import date, datetime
+from conbond import jisilu, strategy, ricequant
 import pandas as pd
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("cache_dir", None, "Cache directory")
 flags.DEFINE_integer("top", 20, "Number of candidates")
-flags.DEFINE_string("data_source", "jisilu",
-                    "Data source: jqdata, jisilu, rqdata")
+flags.DEFINE_string("data_source", "jisilu", "Data source: jisilu, rqdata")
 flags.DEFINE_string("positions", "positions.json", "File to store positions")
 flags.DEFINE_string("txn_day",
                     date.today().strftime('%Y-%m-%d'),
@@ -20,7 +19,8 @@ flags.DEFINE_string("txn_day",
 
 
 def main(argv):
-    df_date = date.fromisoformat(FLAGS.txn_day)
+    df_date = datetime.fromordinal(
+        date.fromisoformat(FLAGS.txn_day).toordinal())
     df = None
     username = None
     password = None
@@ -35,22 +35,35 @@ def main(argv):
     username = auth[FLAGS.data_source]['username']
     password = auth[FLAGS.data_source]['password']
 
-    if FLAGS.data_source == 'jqdata':
-        joinquant.auth(username, password)
-        df = joinquant.fetch(df_date, FLAGS.cache_dir)
-    elif FLAGS.data_source == 'jisilu':
+    if FLAGS.data_source == 'jisilu':
         df_trade_dates = pd.read_excel('trading_dates.xlsx')
         df_date = df_trade_dates.loc[df_trade_dates.index[
-            df_trade_dates.trading_date.dt.date < date.fromisoformat(
-                FLAGS.txn_day)][-1]].trading_date
+            df_trade_dates.trading_date < df_date][-1]].trading_date
         df = jisilu.fetch(df_date, FLAGS.cache_dir, username, password)
+        df = df.nsmallest(FLAGS.top, 'double_low')
+        logging.info(df[[
+            'short_name', 'bond_price', 'convert_premium_rate', 'double_low'
+        ]])
     elif FLAGS.data_source == 'rqdata':
         ricequant.auth(username, password)
         df = ricequant.fetch(df_date,
-                                          cache_dir=FLAGS.cache_dir,
-                                          logger=logging)
-        logging.info('过滤标的：%s' % df[(df.bond_type == 'cb') & (df.filtered)][['symbol', 'filtered_reason']])
+                             cache_dir=FLAGS.cache_dir,
+                             logger=logging)
+        df = strategy.multi_factors(df, {
+            'bond_price': 0.5,
+            'conversion_premium': 0.5 * 100,
+        })
+        df = df.sort_values('weighted_score').reset_index()
+        df['rank'] = df.index.to_series()
+        df = df.set_index('order_book_id')
+        df_filtered = df[df.filtered][['symbol', 'filtered_reason', 'rank']]
+        logging.info('过滤标的：%s' % df_filtered)
         df = df[~df.filtered]
+        df = df.head(FLAGS.top)
+        logging.info(df[[
+            'symbol', 'bond_price', 'conversion_premium', 'weighted_score',
+            'rank'
+        ]])
 
     positions_file = pathlib.Path(FLAGS.positions)
     if positions_file.exists():
@@ -59,17 +72,7 @@ def main(argv):
         positions = json.loads(
             '{"current": "NONE", "NONE": {"positions": [], "orders": {}}}')
 
-    logging.info('Using multi_factors strategy')
-    df_candidates = strategy.multi_factors(
-        df, {
-            'factors': {
-                'bond_price': 0.5,
-                'conversion_premium': 0.5 * 100,
-            },
-            'top': FLAGS.top,
-        })
-    logging.info(df_candidates[['symbol', 'bond_price', 'conversion_premium', '__rank__']])
-    candidates = set(df_candidates.index.values.tolist())
+    candidates = set(df.index.values.tolist())
     position_date = positions['current']
     holdings = set(positions[position_date]['positions'])
     orders = {}

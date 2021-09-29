@@ -21,7 +21,6 @@ flags.mark_flag_as_required('end_date')
 def main(argv):
     run_dir = pathlib.Path('logs').joinpath(
         datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
-    logging.info('Run dir: {0}, log: {0}/debug.log'.format(run_dir))
     run_dir.mkdir(parents=True, exist_ok=False)
     logging.basicConfig(level=logging.INFO,
                         filename='%s/debug.log' % run_dir,
@@ -42,12 +41,10 @@ def main(argv):
                 'run_dir': run_dir.resolve(),
                 'cache_dir': FLAGS.cache_dir,
                 'strategy_config': {
-                    'factors': {
-                        'bond_price': 0.5,
-                        'conversion_premium': 0.5 * 100,
-                    },
-                    'top': 20,
-                }
+                    'bond_price': 0.5,
+                    'conversion_premium': 0.5 * 100,
+                },
+                'top': 20,
             },
             'log_level': 'error',
             'locale': 'zh_Hans_CN',
@@ -105,6 +102,7 @@ def main(argv):
         }
     }
     run_file(FLAGS.file, config)
+    print('Run dir: {0}, log: {0}/debug.log'.format(run_dir))
 
 
 if __name__ == '__main__':
