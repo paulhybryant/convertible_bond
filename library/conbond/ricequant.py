@@ -148,8 +148,8 @@ def fetch(txn_day, cache_dir=None, logger=None):
                                                    columns={0: 'suspended'})
 
     df = populate_metrics(df_all_instruments, df_conversion_price,
-                            df_latest_bond_price, df_latest_stock_price,
-                            df_call_info, df_indicators, df_suspended)
+                          df_latest_bond_price, df_latest_stock_price,
+                          df_call_info, df_indicators, df_suspended)
     return filter(txn_day, df)
 
 
@@ -164,7 +164,7 @@ def populate_metrics(all_instruments, conversion_price, bond_price,
         stock_price).reset_index().set_index('order_book_id')
 
     # Add bond_price column
-    bond_price = bond_price[['order_book_id',
+    bond_price = bond_price[['order_book_id', 'volume', 'total_turnover',
                              'close']].rename(columns={
                                  'close': 'bond_price'
                              }).set_index('order_book_id')
@@ -195,7 +195,7 @@ def filter(txn_day, all_instruments):
         # Filter bonds that have small remaining size (< 100,000,000)
         # 128060, 2019-11-20, remaining_size: 105917700.0
         if bond.remaining_size < 100000000:
-            return True, '规模小于一亿'
+            return True, '规模小于一亿: %s' % bond.remaining_size
 
         # Filter suspended bonds
         if bond.suspended:
@@ -204,7 +204,16 @@ def filter(txn_day, all_instruments):
         # Filter force redeemed bonds
         if bond.info_date is not np.nan and date.fromisoformat(
                 bond.info_date) <= txn_day.date():
-            return True, '已公告强赎'
+            return True, '已公告强赎: %s' % bond.info_date
+
+        # Filter bonds close to maturity (30 days)
+        if (date.fromisoformat(bond.maturity_date) - txn_day.date()).days < 30:
+            return True, '临近赎回日: %s' % bond.maturity_date
+
+        # Filter conbond has small volume
+        if bond.volume is np.nan or bond.volume < 100 or bond.total_turnover is np.nan or bond.total_turnover < 500000:
+            return True, '无/低成交, 量:%s, 额:%s' % (
+                bond.volume, bond.total_turnover)
 
         return False, ''
 

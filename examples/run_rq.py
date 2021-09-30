@@ -47,7 +47,6 @@ def main(argv):
                 'top': 20,
             },
             'log_level': 'error',
-            'locale': 'zh_Hans_CN',
         },
         'mod': {
             'sys_analyser': {

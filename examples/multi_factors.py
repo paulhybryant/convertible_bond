@@ -35,7 +35,18 @@ def rebalance(context, bar_dict):
     df = df.set_index('order_book_id')
 
     df_filtered = df[df.filtered][['symbol', 'filtered_reason', 'date', 'rank']]
-    df_candidates = df[~df.filtered].head(context.top)
+
+    positions = set()
+    suspended = set()
+    for p in context.portfolio.get_positions():
+        inst = df.loc[p.order_book_id]
+        if inst.at['suspended']:
+            suspended.add(p.order_book_id)
+            logging.info('持仓停牌: %s' % p.order_book_id)
+        else:
+            positions.add(p.order_book_id)
+
+    df_candidates = df[~df.filtered].head(context.top - len(suspended))
     if context.written:
         df_candidates[[
             'symbol', 'bond_price', 'conversion_premium', 'weighted_score', 'date', 'rank'
@@ -49,9 +60,6 @@ def rebalance(context, bar_dict):
         context.written = True
 
     candidates = set(df_candidates.index.values.tolist())
-    positions = set()
-    for p in context.portfolio.get_positions():
-        positions.add(p.order_book_id)
     # 平仓
     for order_book_id in (positions - candidates):
         order = order_target_percent(order_book_id, 0)

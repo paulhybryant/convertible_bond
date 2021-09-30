@@ -1,0 +1,275 @@
+INFO:root:Use data from: 2018-01-02
+INFO:root:Use data from: 2018-01-08
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-01-15
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-01-22
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-01-29
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-02-05
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-02-12
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-02-22
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-02-26
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:Use data from: 2018-03-05
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-03-12
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-03-19
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-03-26
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-04-02
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-04-09
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 113016.XSHG
+INFO:root:持仓停牌: 113016.XSHG
+INFO:root:Use data from: 2018-04-16
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-04-23
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-05-02
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-05-07
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 113502.XSHG
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-05-14
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:持仓停牌: 123007.XSHE
+INFO:root:Use data from: 2018-05-21
+INFO:root:持仓停牌: 128036.XSHE
+INFO:root:持仓停牌: 128036.XSHE
+INFO:root:Use data from: 2018-05-28
+INFO:root:持仓停牌: 128036.XSHE
+INFO:root:持仓停牌: 128036.XSHE
+INFO:root:Use data from: 2018-06-04
+INFO:root:Use data from: 2018-06-11
+INFO:root:Use data from: 2018-06-19
+INFO:root:Use data from: 2018-06-25
+INFO:root:Use data from: 2018-07-02
+INFO:root:Use data from: 2018-07-09
+INFO:root:Use data from: 2018-07-16
+INFO:root:Use data from: 2018-07-23
+INFO:root:Use data from: 2018-07-30
+INFO:root:Order error: Order({'order_id': 16329636030542, 'secondary_order_id': None, 'trading_datetime': datetime.datetime(2018, 7, 30, 15, 0), 'datetime': datetime.datetime(2018, 7, 30, 15, 0), 'quantity': 500, 'unfilled_quantity': 450, 'order_book_id': '113012.XSHG', 'side': SIDE.SELL, 'position_effect': POSITION_EFFECT.CLOSE, 'position_direction': POSITION_DIRECTION.LONG, 'message': '113012.XSHG 下单量 500 超过当前 Bar 成交量的 25.0%，实际成交 50', 'filled_quantity': 50, 'status': ORDER_STATUS.CANCELLED, 'price': 0, 'type': ORDER_TYPE.MARKET, 'avg_price': 99.29, 'transaction_cost': 9.964500000000001, 'frozen_price': 99.29, 'init_frozen_cash': 89.361, 'kwargs': {}})
+INFO:root:Use data from: 2018-08-06
+INFO:root:Order error: Order({'order_id': 16329636030561, 'secondary_order_id': None, 'trading_datetime': datetime.datetime(2018, 8, 6, 15, 0), 'datetime': datetime.datetime(2018, 8, 6, 15, 0), 'quantity': 450, 'unfilled_quantity': 260, 'order_book_id': '113012.XSHG', 'side': SIDE.SELL, 'position_effect': POSITION_EFFECT.CLOSE, 'position_direction': POSITION_DIRECTION.LONG, 'message': '113012.XSHG 下单量 450 超过当前 Bar 成交量的 25.0%，实际成交 190', 'filled_quantity': 190, 'status': ORDER_STATUS.CANCELLED, 'price': 0, 'type': ORDER_TYPE.MARKET, 'avg_price': 97.32, 'transaction_cost': 33.28344, 'frozen_price': 97.32, 'init_frozen_cash': 78.82920000000001, 'kwargs': {}})
+INFO:root:Use data from: 2018-08-13
+INFO:root:Use data from: 2018-08-20
+INFO:root:Use data from: 2018-08-27
+INFO:root:Use data from: 2018-09-03
+INFO:root:Use data from: 2018-09-10
+INFO:root:Use data from: 2018-09-17
+INFO:root:Use data from: 2018-09-25
+INFO:root:Use data from: 2018-10-08
+INFO:root:Use data from: 2018-10-15
+INFO:root:Use data from: 2018-10-22
+INFO:root:Use data from: 2018-10-29
+INFO:root:Use data from: 2018-11-05
+INFO:root:Use data from: 2018-11-12
+INFO:root:Use data from: 2018-11-19
+INFO:root:Use data from: 2018-11-26
+INFO:root:Order error: Order({'order_id': 16329636030820, 'secondary_order_id': None, 'trading_datetime': datetime.datetime(2018, 11, 26, 15, 0), 'datetime': datetime.datetime(2018, 11, 26, 15, 0), 'quantity': 510, 'unfilled_quantity': 270, 'order_book_id': '128033.XSHE', 'side': SIDE.SELL, 'position_effect': POSITION_EFFECT.CLOSE, 'position_direction': POSITION_DIRECTION.LONG, 'message': '128033.XSHE 下单量 510 超过当前 Bar 成交量的 25.0%，实际成交 240', 'filled_quantity': 240, 'status': ORDER_STATUS.CANCELLED, 'price': 0, 'type': ORDER_TYPE.MARKET, 'avg_price': 97.7, 'transaction_cost': 42.2064, 'frozen_price': 97.7, 'init_frozen_cash': 89.68860000000001, 'kwargs': {}})
+INFO:root:Use data from: 2018-12-03
+INFO:root:Use data from: 2018-12-10
+INFO:root:Use data from: 2018-12-17
+INFO:root:Use data from: 2018-12-24
+INFO:root:Use data from: 2019-01-02
+INFO:root:Use data from: 2019-01-07
+INFO:root:Use data from: 2019-01-14
+INFO:root:Use data from: 2019-01-21
+INFO:root:Use data from: 2019-01-28
+INFO:root:Use data from: 2019-02-11
+INFO:root:Use data from: 2019-02-18
+INFO:root:Use data from: 2019-02-25
+INFO:root:Use data from: 2019-03-04
+INFO:root:Use data from: 2019-03-11
+INFO:root:Use data from: 2019-03-18
+INFO:root:Use data from: 2019-03-25
+INFO:root:Use data from: 2019-04-01
+INFO:root:Use data from: 2019-04-08
+INFO:root:持仓停牌: 128040.XSHE
+INFO:root:持仓停牌: 128040.XSHE
+INFO:root:Use data from: 2019-04-15
+INFO:root:持仓停牌: 128043.XSHE
+INFO:root:持仓停牌: 128043.XSHE
+INFO:root:持仓停牌: 128040.XSHE
+INFO:root:持仓停牌: 128040.XSHE
+INFO:root:Use data from: 2019-04-22
+INFO:root:持仓停牌: 128043.XSHE
+INFO:root:持仓停牌: 128043.XSHE
+INFO:root:Use data from: 2019-04-29
+INFO:root:Use data from: 2019-05-06
+INFO:root:Use data from: 2019-05-13
+INFO:root:Use data from: 2019-05-20
+INFO:root:Use data from: 2019-05-27
+INFO:root:Use data from: 2019-06-03
+INFO:root:Use data from: 2019-06-10
+INFO:root:Order error: Order({'order_id': 16329636031554, 'secondary_order_id': None, 'trading_datetime': datetime.datetime(2019, 6, 10, 15, 0), 'datetime': datetime.datetime(2019, 6, 10, 15, 0), 'quantity': 640, 'unfilled_quantity': 90, 'order_book_id': '123014.XSHE', 'side': SIDE.SELL, 'position_effect': POSITION_EFFECT.CLOSE, 'position_direction': POSITION_DIRECTION.LONG, 'message': '123014.XSHE 下单量 640 超过当前 Bar 成交量的 25.0%，实际成交 550', 'filled_quantity': 550, 'status': ORDER_STATUS.CANCELLED, 'price': 0, 'type': ORDER_TYPE.MARKET, 'avg_price': 100.45, 'transaction_cost': 99.44550000000001, 'frozen_price': 100.45, 'init_frozen_cash': 115.7184, 'kwargs': {}})
+INFO:root:Use data from: 2019-06-17
+INFO:root:Order error: Order({'order_id': 16329636031585, 'secondary_order_id': None, 'trading_datetime': datetime.datetime(2019, 6, 17, 15, 0), 'datetime': datetime.datetime(2019, 6, 17, 15, 0), 'quantity': 600, 'unfilled_quantity': 180, 'order_book_id': '113526.XSHG', 'side': SIDE.SELL, 'position_effect': POSITION_EFFECT.CLOSE, 'position_direction': POSITION_DIRECTION.LONG, 'message': '113526.XSHG 下单量 600 超过当前 Bar 成交量的 25.0%，实际成交 420', 'filled_quantity': 420, 'status': ORDER_STATUS.CANCELLED, 'price': 0, 'type': ORDER_TYPE.MARKET, 'avg_price': 110.51, 'transaction_cost': 83.54556000000002, 'frozen_price': 110.51, 'init_frozen_cash': 119.35079999999999, 'kwargs': {}})
+INFO:root:Use data from: 2019-06-24
+INFO:root:Use data from: 2019-07-01
+INFO:root:Use data from: 2019-07-08
+INFO:root:Use data from: 2019-07-15
+INFO:root:Use data from: 2019-07-22
+INFO:root:Use data from: 2019-07-29
+INFO:root:Use data from: 2019-08-05
+INFO:root:Use data from: 2019-08-12
+INFO:root:Use data from: 2019-08-19
+INFO:root:Use data from: 2019-08-26
+INFO:root:Use data from: 2019-09-02
+INFO:root:Use data from: 2019-09-09
+INFO:root:Use data from: 2019-09-16
+INFO:root:Use data from: 2019-09-23
+INFO:root:Use data from: 2019-09-30
+INFO:root:Use data from: 2019-10-08
+INFO:root:Use data from: 2019-10-14
+INFO:root:Use data from: 2019-10-21
+INFO:root:Use data from: 2019-10-28
+INFO:root:Use data from: 2019-11-04
+INFO:root:Use data from: 2019-11-11
+INFO:root:Use data from: 2019-11-18
+INFO:root:Use data from: 2019-11-25
+INFO:root:Use data from: 2019-12-02
+INFO:root:Use data from: 2019-12-09
+INFO:root:Use data from: 2019-12-16
+INFO:root:Use data from: 2019-12-23
+INFO:root:Use data from: 2019-12-30
+INFO:root:Use data from: 2020-01-06
+INFO:root:Use data from: 2020-01-13
+INFO:root:Use data from: 2020-01-20
+INFO:root:Use data from: 2020-02-03
+INFO:root:Use data from: 2020-02-10
+INFO:root:Use data from: 2020-02-17
+INFO:root:Use data from: 2020-02-24
+INFO:root:Use data from: 2020-03-02
+INFO:root:Use data from: 2020-03-09
+INFO:root:Use data from: 2020-03-16
+INFO:root:Use data from: 2020-03-23
+INFO:root:Use data from: 2020-03-30
+INFO:root:Use data from: 2020-04-07
+INFO:root:Use data from: 2020-04-13
+INFO:root:Use data from: 2020-04-20
+INFO:root:Use data from: 2020-04-27
+INFO:root:Use data from: 2020-05-06
+INFO:root:Use data from: 2020-05-11
+INFO:root:Use data from: 2020-05-18
+INFO:root:Use data from: 2020-05-25
+INFO:root:Use data from: 2020-06-01
+INFO:root:Use data from: 2020-06-08
+INFO:root:Use data from: 2020-06-15
+INFO:root:Use data from: 2020-06-22
+INFO:root:Use data from: 2020-06-29
+INFO:root:Use data from: 2020-07-06
+INFO:root:Use data from: 2020-07-13
+INFO:root:持仓停牌: 123043.XSHE
+INFO:root:持仓停牌: 123043.XSHE
+INFO:root:Use data from: 2020-07-20
+INFO:root:持仓停牌: 123043.XSHE
+INFO:root:持仓停牌: 123043.XSHE
+INFO:root:Use data from: 2020-07-27
+INFO:root:Use data from: 2020-08-03
+INFO:root:Use data from: 2020-08-10
+INFO:root:Use data from: 2020-08-17
+INFO:root:Use data from: 2020-08-24
+INFO:root:Use data from: 2020-08-31
+INFO:root:Use data from: 2020-09-07
+INFO:root:Use data from: 2020-09-14
+INFO:root:Use data from: 2020-09-21
+INFO:root:Use data from: 2020-09-28
+INFO:root:Use data from: 2020-10-09
+INFO:root:Use data from: 2020-10-12
+INFO:root:Use data from: 2020-10-19
+INFO:root:Use data from: 2020-10-26
+INFO:root:Use data from: 2020-11-02
+INFO:root:Use data from: 2020-11-09
+INFO:root:持仓停牌: 113595.XSHG
+INFO:root:持仓停牌: 113595.XSHG
+INFO:root:Use data from: 2020-11-16
+INFO:root:Use data from: 2020-11-23
+INFO:root:Use data from: 2020-11-30
+INFO:root:Use data from: 2020-12-07
+INFO:root:Use data from: 2020-12-14
+INFO:root:Use data from: 2020-12-21
+INFO:root:Use data from: 2020-12-28
+INFO:root:Use data from: 2021-01-04
+INFO:root:Use data from: 2021-01-11
+INFO:root:Use data from: 2021-01-18
+INFO:root:Use data from: 2021-01-25
+INFO:root:Use data from: 2021-02-01
+INFO:root:Use data from: 2021-02-08
+INFO:root:Use data from: 2021-02-18
+INFO:root:Use data from: 2021-02-22
+INFO:root:Use data from: 2021-03-01
+INFO:root:Use data from: 2021-03-08
+INFO:root:Use data from: 2021-03-15
+INFO:root:Use data from: 2021-03-22
+INFO:root:Use data from: 2021-03-29
+INFO:root:Use data from: 2021-04-06
+INFO:root:Use data from: 2021-04-12
+INFO:root:Use data from: 2021-04-19
+INFO:root:Use data from: 2021-04-26
+INFO:root:Use data from: 2021-05-06
+INFO:root:Use data from: 2021-05-10
+INFO:root:Use data from: 2021-05-17
+INFO:root:Use data from: 2021-05-24
+INFO:root:Use data from: 2021-05-31
+INFO:root:Use data from: 2021-06-07
+INFO:root:Use data from: 2021-06-15
+INFO:root:Use data from: 2021-06-21
+INFO:root:Use data from: 2021-06-28
+INFO:root:Use data from: 2021-07-05
+INFO:root:Use data from: 2021-07-12
+INFO:root:Use data from: 2021-07-19
+INFO:root:Use data from: 2021-07-26
+INFO:root:Use data from: 2021-08-02
+INFO:root:Use data from: 2021-08-09
+INFO:root:Use data from: 2021-08-16
+INFO:root:Use data from: 2021-08-23
+INFO:root:Use data from: 2021-08-30
+INFO:root:Use data from: 2021-09-06
+INFO:root:Use data from: 2021-09-13
+INFO:root:Use data from: 2021-09-22
