@@ -62,6 +62,8 @@ def main(argv):
             },
             'sys_accounts': {
                 'enabled': True,
+                # conbond is T0
+                "stock_t1": False,
             },
             'sys_scheduler': {
                 'enabled': True,

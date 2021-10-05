@@ -38,7 +38,7 @@ def fetch(txn_day, cache_dir=None, username=None, password=None):
             'jisilu', txn_day.strftime('%Y-%m-%d'), 'jisilu.json')
         cache_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if cache_path.exists():
+    if cache_path and cache_path.exists():
         print('Using cached file: %s' % cache_path)
         jisilu_data = json.loads(cache_path.open('r').read())
     else:
