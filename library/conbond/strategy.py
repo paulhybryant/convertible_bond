@@ -3,31 +3,28 @@ import pandas as pd
 from datetime import date
 
 
-def double_rank(df, txn_day, config, score_col, rank_col):
-    df = df.sort_values('bond_price').reset_index()
-    df['bond_price_rank'] = df.index.to_series()
-    df = df.sort_values('conversion_premium')
-    df['conversion_premium_rank'] = df.index.to_series()
-    df[score_col] = df.bond_price_rank + df.conversion_premium_rank
+def multi_factors_rank(df, txn_day, config, score_col, rank_col):
+    factors = config.keys()
+    df = df.reset_index()
+    df[score_col] = 0
+    for factor in factors:
+        df = df.sort_values(factor)
+        df[score_col] += df.index.to_series()
+        df.reset_index(drop=True, inplace=True)
     return post_scoring(df, txn_day, score_col, rank_col)
 
-def multi_factors(df, txn_day, config, score_col, rank_col):
+
+def multi_factors_weighted_linear(df, txn_day, config, score_col, rank_col):
     factors = config.keys()
     weights = config.values()
     df[score_col] = (df[factors] * weights).sum(axis=1)
     return post_scoring(df, txn_day, score_col, rank_col)
 
 
-def traditional_double_low(df, txn_day, config, score_col, rank_col):
-    # 传统双低：价格 + 100 * 转股溢价率
-    df[score_col] = df.bond_price + 100 * df.conversion_premium
-    return post_scoring(df, txn_day, score_col, rank_col)
-
-
 def post_scoring(df, txn_day, score_col, rank_col):
     df = filter(txn_day, df).sort_values(score_col).reset_index()
     df[rank_col] = df.index.to_series()
-    return df
+    return df.set_index('order_book_id')
 
 
 def filter(txn_day, all_instruments):

@@ -52,7 +52,6 @@ def main(argv):
         score_col = 'double_low'
         rank_col = 'rank'
         df = strategy.traditional_double_low(df, df_date, {}, score_col, rank_col)
-        df = df.set_index('order_book_id')
         top = df[~df.filtered].iloc[FLAGS.top].at[rank_col]
         df = df.head(top)
         logging.info('\n%s' % df[[

@@ -45,7 +45,6 @@ def rebalance(context, bar_dict):
     s = getattr(strategy, context.strategy_name)
     df = s(df, context.now, context.strategy_config, score_col, rank_col)
     df['date'] = context.now.date()
-    df = df.set_index('order_book_id')
 
     positions = set()
     suspended = set()
@@ -92,9 +91,10 @@ def rebalance(context, bar_dict):
 
 def main(argv):
     #  cfg = json.load(pathlib.Path(FLAGS.strategy_cfg).open(), object_hook=lambda d: types.SimpleNamespace(**d))
-    cfg = json.load(pathlib.Path(FLAGS.strategy_cfg).open())
+    p = pathlib.Path(FLAGS.strategy_cfg)
+    cfg = json.load(p.open())
     run_dir = pathlib.Path('logs').joinpath(
-        cfg['name'],
+        p.stem,
         datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
     run_dir.mkdir(parents=True, exist_ok=False)
     logging.basicConfig(level=logging.INFO,
@@ -124,7 +124,7 @@ def main(argv):
         'mod': {
             'sys_analyser': {
                 'enabled': True,
-                'output_file': '%s/result.pkl' % run_dir,
+                'output_file': '%s/%s.pkl' % (run_dir, p.stem),
                 'report_save_path': '%s/report' % run_dir,
                 'plot': False,
                 'plot_save_file': '%s/plot.png' % run_dir,
