@@ -1,0 +1,8 @@
+{
+  "name": "traditional_double_low",
+  "config": {
+    "bond_price": 1,
+    "conversion_premium": 100
+  },
+  "top": 20
+}

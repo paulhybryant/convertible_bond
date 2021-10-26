@@ -45,24 +45,19 @@ def main(argv):
             'short_name', 'bond_price', 'convert_premium_rate', 'double_low'
         ]])
     elif FLAGS.data_source == 'rqdata':
-        ricequant.auth(username, password)
+        # ricequant.auth(username, password)
         df = ricequant.fetch(df_date,
                              cache_dir=FLAGS.cache_dir,
                              logger=logging)
-        df = strategy.multi_factors(df, {
-            'bond_price': 0.5,
-            'conversion_premium': 0.5 * 100,
-        })
-        df = df.sort_values('weighted_score').reset_index()
-        df['rank'] = df.index.to_series()
+        score_col = 'double_low'
+        rank_col = 'rank'
+        df = strategy.traditional_double_low(df, df_date, {}, score_col, rank_col)
         df = df.set_index('order_book_id')
-        df_filtered = df[df.filtered][['symbol', 'filtered_reason', 'rank']]
-        logging.info('过滤标的：%s' % df_filtered)
-        df = df[~df.filtered]
-        df = df.head(FLAGS.top)
-        logging.info(df[[
-            'symbol', 'bond_price', 'conversion_premium', 'weighted_score',
-            'rank'
+        top = df[~df.filtered].iloc[FLAGS.top].at[rank_col]
+        df = df.head(top)
+        logging.info('\n%s' % df[[
+            'symbol', 'bond_price', 'conversion_premium', score_col, rank_col,
+            'filtered', 'filtered_reason'
         ]])
 
     positions_file = pathlib.Path(FLAGS.positions)
