@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 
-import json
-import pathlib
 from absl import app, flags, logging
-from datetime import date, datetime
 from conbond import jisilu, strategy, ricequant
+from datetime import date, datetime
+import json
 import pandas as pd
+import pathlib
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("cache_dir", None, "Cache directory")
-flags.DEFINE_integer("top", 20, "Number of candidates")
-flags.DEFINE_string("data_source", "jisilu", "Data source: jisilu, rqdata")
-flags.DEFINE_string("positions", "positions.json", "File to store positions")
-flags.DEFINE_string("txn_day",
+flags.DEFINE_string('cache_dir', None, 'Cache directory')
+flags.DEFINE_integer('top', 20, 'Number of candidates')
+flags.DEFINE_string('data_source', 'jisilu', 'Data source: jisilu, rqdata')
+flags.DEFINE_string('positions', 'positions.json', 'File to store positions')
+flags.DEFINE_string('txn_day',
                     date.today().strftime('%Y-%m-%d'),
-                    "Date to generate the candidates")
+                    'Date to generate the candidates')
 
 
 def main(argv):
@@ -51,7 +51,14 @@ def main(argv):
                              logger=logging)
         score_col = 'double_low'
         rank_col = 'rank'
-        df = strategy.traditional_double_low(df, df_date, {}, score_col, rank_col)
+        df = strategy.multi_factors_weighted_linear(df, df_date, {
+            'factors': {
+                'bond_price': 1,
+                'conversion_premium': 100
+            },
+            'asc': True
+        }, score_col, rank_col)
+        df.to_csv('test.csv')
         top = df[~df.filtered].iloc[FLAGS.top].at[rank_col]
         df = df.head(top)
         logging.info('\n%s' % df[[
@@ -87,5 +94,5 @@ def main(argv):
         logging.info('Positions is not updated.')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(main)

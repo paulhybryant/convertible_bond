@@ -1,28 +1,30 @@
 import numpy as np
 import pandas as pd
 from datetime import date
+import logging
 
 
 def multi_factors_rank(df, txn_day, config, score_col, rank_col):
-    factors = config.keys()
+    factors = config['factors'].keys()
     df = df.reset_index()
     df[score_col] = 0
     for factor in factors:
-        df = df.sort_values(factor)
+        df = df.sort_values(factor).reset_index(drop=True)
+        df['%s_rank' % factor] = df.index.to_series()
         df[score_col] += df.index.to_series()
         df.reset_index(drop=True, inplace=True)
-    return post_scoring(df, txn_day, score_col, rank_col)
+    return post_scoring(df, txn_day, True, score_col, rank_col)
 
 
 def multi_factors_weighted_linear(df, txn_day, config, score_col, rank_col):
-    factors = config.keys()
-    weights = config.values()
+    factors = config['factors'].keys()
+    weights = config['factors'].values()
     df[score_col] = (df[factors] * weights).sum(axis=1)
-    return post_scoring(df, txn_day, score_col, rank_col)
+    return post_scoring(df, txn_day, config['asc'], score_col, rank_col)
 
 
-def post_scoring(df, txn_day, score_col, rank_col):
-    df = filter(txn_day, df).sort_values(score_col).reset_index()
+def post_scoring(df, txn_day, ascending, score_col, rank_col):
+    df = filter(txn_day, df).sort_values(score_col, ascending=ascending).reset_index()
     df[rank_col] = df.index.to_series()
     return df.set_index('order_book_id')
 

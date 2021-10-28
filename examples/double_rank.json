@@ -2,8 +2,11 @@
   "comment": "双低变种：双排序，按照制定的因子排序，求和",
   "name": "multi_factors_rank",
   "config": {
-    "bond_price": 1,
-    "conversion_premium": 1
+    "factors": {
+      "bond_price": 1,
+      "conversion_premium": 1
+    },
+    "asc": true
   },
   "top": 20
 }

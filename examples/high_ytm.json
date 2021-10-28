@@ -1,0 +1,11 @@
+{
+  "comment": "高YTM",
+  "name": "multi_factors_weighted_linear",
+  "config": {
+    "factors": {
+      "yield_to_maturity": 1
+    },
+    "asc": false
+  },
+  "top": 20
+}

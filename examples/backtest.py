@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from absl import app, flags
+from attrdict import AttrDict
 from conbond import ricequant, strategy
 from datetime import datetime
 from rqalpha import run_func
@@ -43,8 +44,9 @@ def rebalance(context, bar_dict):
                          logger=logging)
     score_col = 'weighted_score'
     rank_col = 'rank'
-    s = getattr(strategy, context.strategy_name)
-    df = s(df, context.now, context.strategy_config, score_col, rank_col)
+    logging.info(type(context.strategy_config))
+    s = getattr(strategy, context.strategy_config['name'])
+    df = s(df, context.now, context.strategy_config['config'].convert_to_dict(), score_col, rank_col)
     df['date'] = context.now.date()
 
     positions = set()
@@ -57,8 +59,8 @@ def rebalance(context, bar_dict):
         else:
             positions.add(p.order_book_id)
 
-    top = context.top - len(suspended)
-    head = df[~df.filtered].iloc[top].at[rank_col]
+    top = context.strategy_config['top']
+    head = df[~df.filtered].iloc[top - len(suspended)].at[rank_col]
     df = df.head(head)
     if context.written:
         df[[
@@ -80,12 +82,12 @@ def rebalance(context, bar_dict):
             logging.info('Order error: %s' % order)
     # 调仓
     for order_book_id in (positions & candidates):
-        order = order_target_percent(order_book_id, 1 / context.top)
+        order = order_target_percent(order_book_id, 1 / top)
         if order is not None and order.status != ORDER_STATUS.FILLED:
             logging.info('Order error: %s' % order)
     # 开仓
     for order_book_id in (candidates - positions):
-        order = order_target_percent(order_book_id, 1 / context.top)
+        order = order_target_percent(order_book_id, 1 / top)
         if order is not None and order.status != ORDER_STATUS.FILLED:
             logging.info('Order error: %s' % order)
 
@@ -103,26 +105,25 @@ def plot_results(results, savefile=None):
         u'STHeiti',
         u'WenQuanYi Zen Hei',
         u'WenQuanYi Micro Hei',
-        u"文泉驿微米黑",
+        u'文泉驿微米黑',
         u'SimHei',
     ] + rcParams['font.sans-serif']
     rcParams['axes.unicode_minus'] = False
 
     use_chinese_fonts = True
     font = findfont(FontProperties(family=['sans-serif']))
-    if "/matplotlib/" in font:
+    if '/matplotlib/' in font:
         use_chinese_fonts = False
-        logging.warn("Missing Chinese fonts. Fallback to English.")
+        logging.warn('Missing Chinese fonts. Fallback to English.')
 
     title = 'Conbond Strateties Comparison'
     benchmark_portfolio = None
     plt.style.use('ggplot')
-    plots_area_size = 0
-    img_width = 13
-    img_height = 6 + int(plots_area_size * 0.9)
+    img_width = 16
+    img_height = 10
     fig = plt.figure(title, figsize=(img_width, img_height))
-    gs = gridspec.GridSpec(10 + plots_area_size, 8)
-    ax = plt.subplot(gs[2:10, :])
+    gs = gridspec.GridSpec(img_height, img_width)
+    ax = plt.subplot(gs[2:img_height, :])
     ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
@@ -132,10 +133,10 @@ def plot_results(results, savefile=None):
         'sharpe', 'max_drawdown', 'total_returns', 'annualized_returns'
     ]
     for strategy, result_dict in results.items():
-        summary = result_dict["summary"]
+        summary = result_dict['summary']
 
         if benchmark_portfolio is None:
-            benchmark_portfolio = result_dict.get("benchmark_portfolio")
+            benchmark_portfolio = result_dict.get('benchmark_portfolio')
             index = benchmark_portfolio.index
             portfolio_value = benchmark_portfolio.unit_net_value
             xs = portfolio_value.values
@@ -148,8 +149,8 @@ def plot_results(results, savefile=None):
                 benchmark_portfolio.loc[index[max_dd_start]].unit_net_value -
                 benchmark_portfolio.loc[index[max_dd_end]].unit_net_value
             ) / benchmark_portfolio.loc[index[max_dd_start]].unit_net_value
-            ax.plot(benchmark_portfolio["unit_net_value"] - 1.0,
-                    label="HS300",
+            ax.plot(benchmark_portfolio['unit_net_value'] - 1.0,
+                    label='HS300',
                     alpha=1,
                     linewidth=2)
             table_data['HS300'] = [
@@ -158,14 +159,14 @@ def plot_results(results, savefile=None):
             ]
         table_data[strategy] = [summary[col] for col in table_columns]
 
-        portfolio = result_dict["portfolio"]
-        ax.plot(portfolio["unit_net_value"] - 1.0,
+        portfolio = result_dict['portfolio']
+        ax.plot(portfolio['unit_net_value'] - 1.0,
                 label=strategy,
                 alpha=1,
                 linewidth=2)
 
     # place legend
-    leg = plt.legend(loc="best")
+    leg = plt.legend(loc='best')
     leg.get_frame().set_alpha(0.5)
 
     # manipulate axis
@@ -178,7 +179,7 @@ def plot_results(results, savefile=None):
                                     columns={'index': 'strategy'})
     df[['max_drawdown', 'total_returns', 'annualized_returns'
         ]] = df[['max_drawdown', 'total_returns',
-                 'annualized_returns']].applymap("{0:.2%}".format)
+                 'annualized_returns']].applymap('{0:.2%}'.format)
     ax2 = plt.subplot(gs[0:2, :])
     ax2.text(0, 1, 'Start Date: %s, End Date: %s' % (FLAGS.start_date, FLAGS.end_date))
     ax2.table(cellText=df.values, colLabels=df.columns, loc='center')
@@ -192,8 +193,6 @@ def plot_results(results, savefile=None):
 def backtest(sc, run_dir, cache_dir):
     p = pathlib.Path(sc)
     logging.info(p.stem)
-    #  import types
-    #  cfg = json.load(pathlib.Path(FLAGS.strategy_cfg).open(), object_hook=lambda d: types.SimpleNamespace(**d))
     cfg = json.load(p.open())
     config = {
         'base': {
@@ -209,9 +208,7 @@ def backtest(sc, run_dir, cache_dir):
             'context_vars': {
                 'run_dir': run_dir.resolve(),
                 'cache_dir': cache_dir,
-                'strategy_name': cfg['name'],
-                'strategy_config': cfg['config'],
-                'top': cfg['top'],
+                'strategy_config': cfg,
             },
             'log_level': 'error',
         },
@@ -229,7 +226,7 @@ def backtest(sc, run_dir, cache_dir):
             'sys_accounts': {
                 'enabled': True,
                 # conbond is T0
-                "stock_t1": False,
+                'stock_t1': False,
             },
             'sys_scheduler': {
                 'enabled': True,

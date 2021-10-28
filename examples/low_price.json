@@ -1,10 +1,9 @@
 {
-  "comment": "传统双低：价格 + 100 * 转股溢价率",
+  "comment": "低价格",
   "name": "multi_factors_weighted_linear",
   "config": {
     "factors": {
-      "bond_price": 1,
-      "conversion_premium": 100
+      "bond_price": 1
     },
     "asc": true
   },
