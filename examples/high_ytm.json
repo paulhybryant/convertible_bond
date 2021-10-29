@@ -1,11 +1,15 @@
 {
   "comment": "高YTM",
-  "name": "multi_factors_weighted_linear",
+  "scoring_fn": "multi_factors_weighted_linear",
   "config": {
     "factors": {
       "yield_to_maturity": 1
     },
-    "filters": {},
+    "filters": {
+      "停牌": "{suspended}",
+      "已公告强赎": "'{info_date}' <= '{today}'",
+      "成交额低": "{total_turnover} < 500000"
+    },
     "asc": false
   },
   "top": 20

@@ -34,7 +34,7 @@ def init(context):
                          time_rule=market_open(minute=10))
     context.written = False
     context.candidatesf = pathlib.Path(
-        context.run_dir).joinpath('candidates.csv')
+        context.run_dir).joinpath('%s.csv' % context.strategy_name)
 
 
 def rebalance(context, bar_dict):
@@ -44,8 +44,7 @@ def rebalance(context, bar_dict):
                          logger=logging)
     score_col = 'weighted_score'
     rank_col = 'rank'
-    logging.info(type(context.strategy_config))
-    s = getattr(strategy, context.strategy_config['name'])
+    s = getattr(strategy, context.strategy_config['scoring_fn'])
     df = s(df, context.now, context.strategy_config['config'].convert_to_dict(), score_col, rank_col)
     df['date'] = context.now.date()
 
@@ -192,7 +191,8 @@ def plot_results(results, savefile=None):
 
 def backtest(sc, run_dir, cache_dir):
     p = pathlib.Path(sc)
-    logging.info(p.stem)
+    print(p)
+    logging.info('Strategy name: %s' % p.stem)
     cfg = json.load(p.open())
     config = {
         'base': {
@@ -209,6 +209,7 @@ def backtest(sc, run_dir, cache_dir):
                 'run_dir': run_dir.resolve(),
                 'cache_dir': cache_dir,
                 'strategy_config': cfg,
+                'strategy_name': p.stem,
             },
             'log_level': 'error',
         },
@@ -270,6 +271,7 @@ def backtest(sc, run_dir, cache_dir):
 def main(argv):
     run_dir = pathlib.Path('logs').joinpath(
         datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+    print('Run dir: {0}, log: {0}/debug.log'.format(run_dir))
     run_dir.mkdir(parents=True, exist_ok=False)
     logging.basicConfig(level=logging.INFO,
                         filename='%s/debug.log' % run_dir,

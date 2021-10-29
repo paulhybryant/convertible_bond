@@ -1,14 +1,14 @@
 {
   "comment": "低价格",
-  "name": "multi_factors_weighted_linear",
+  "scoring_fn": "multi_factors_weighted_linear",
   "config": {
     "factors": {
       "bond_price": 1
     },
     "filters": {
       "停牌": "{suspended}",
-      "成交量低": "{volume} < 100",
-      "成交额低": "{total_turnover} < 500000",
+      "已公告强赎": "'{info_date}' <= '{today}'",
+      "成交额低": "{total_turnover} < 500000"
     },
     "asc": true
   },

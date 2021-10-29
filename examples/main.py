@@ -16,6 +16,7 @@ flags.DEFINE_string('positions', 'positions.json', 'File to store positions')
 flags.DEFINE_string('txn_day',
                     date.today().strftime('%Y-%m-%d'),
                     'Date to generate the candidates')
+flags.DEFINE_string('strategy_cfg', None, 'Strategy config')
 
 
 def main(argv):
@@ -51,13 +52,10 @@ def main(argv):
                              logger=logging)
         score_col = 'double_low'
         rank_col = 'rank'
-        df = strategy.multi_factors_weighted_linear(df, df_date, {
-            'factors': {
-                'bond_price': 1,
-                'conversion_premium': 100
-            },
-            'asc': True
-        }, score_col, rank_col)
+        cfg = json.load(pathlib.Path(FLAGS.strategy_cfg).open())
+        logging.info(cfg['comment'])
+        s = getattr(strategy, cfg['scoring_fn'])
+        df = s(df, df_date, cfg['config'], score_col, rank_col)
         df.to_csv('test.csv')
         top = df[~df.filtered].iloc[FLAGS.top].at[rank_col]
         df = df.head(top)

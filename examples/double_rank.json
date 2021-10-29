@@ -1,6 +1,6 @@
 {
   "comment": "双低变种：双排序，按照制定的因子排序，求和",
-  "name": "multi_factors_rank",
+  "scoring_fn": "multi_factors_rank",
   "config": {
     "factors": {
       "bond_price": 1,
@@ -8,7 +8,6 @@
     },
     "filters": {
       "停牌": "{suspended}",
-      "成交量低": "{volume} < 100",
       "成交额低": "{total_turnover} < 500000",
       "已公告强赎": "'{info_date}' <= '{today}'",
       "临近到期日": "{days_to_maturity} <= 30"

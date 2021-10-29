@@ -20,7 +20,7 @@ def multi_factors_weighted_linear(df, txn_day, config, score_col, rank_col):
     factors = config['factors'].keys()
     weights = config['factors'].values()
     df[score_col] = (df[factors] * weights).sum(axis=1)
-    return post_scoring(df, txn_day, config['asc'], score_col, rank_col)
+    return post_scoring(df, txn_day, config, score_col, rank_col)
 
 
 def post_scoring(df, txn_day, config, score_col, rank_col):

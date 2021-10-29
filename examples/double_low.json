@@ -1,6 +1,6 @@
 {
   "comment": "传统双低：价格 + 100 * 转股溢价率",
-  "name": "multi_factors_weighted_linear",
+  "scoring_fn": "multi_factors_weighted_linear",
   "config": {
     "factors": {
       "bond_price": 1,
@@ -8,7 +8,6 @@
     },
     "filters": {
       "停牌": "{suspended}",
-      "成交量低": "{volume} < 100",
       "成交额低": "{total_turnover} < 500000",
       "已公告强赎": "'{info_date}' <= '{today}'",
       "临近到期日": "{days_to_maturity} <= 30"
