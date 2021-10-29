@@ -15,21 +15,22 @@
   * 只能试用一个月，而且每天只有50MB
   * 平台试用和sdk试用分开申请，在平台上跑好像流量限制不大
   * 编程API友好，和聚宽几乎一样，文档也不错
+  * 有开源的rqalpha回测框架，rqalpha-plus也是基于rqalpha，可扩展，有代码可以hack
 * 掘金
   * 数据质量不足，缺少转债历史数据
-  * 回测环境最友好，有本地IDE，编程方便
+  * 回测环境最友好，有本地IDE，编程方便，但是必须在windows下起客户端
   * 可转债数据不足，无法回测
 * 优矿
   * 数据比较全
   * 回测可转债的支持好像不太好，需要自己计算持仓，回撤等
   * 数据免费，质量也不错
-  * 编程环境非常友好，方便上手和实验
+  * 编程环境非常友好，方便上手和实验（基于jupyter notebook）
 * 集思录
   * 双低数据什么都算好了，但是没有历史转股价数据等
   * 每一个转债的历史数据有，需要爬
   * 适用于手动轮动，生成基于运行当日数据的标的和操作。
 
-要使用聚宽的数据，需要申请使用，并将用户名密码放在auth.json里。
+要使用聚宽/米筐的数据，需要申请使用，并将用户名密码放在auth.json里。
 要使用集思录的数据，需要将用户名和密码放在auth.json里。否则集思录无法获得完整的转债数据。
 集思录现在是直接用python的requests获取，比较麻烦。也可以考虑Selenium的方案。
 
@@ -53,18 +54,19 @@ auth.json的格式如下：
 }
 
 持仓信息默认放在positions.json里面
-
-Run pip install -e . in the library/ directory before running.
+可以自己些计算策略的函数，也可以用library/里的现成的。
+要安装library/中的库，在library/目录下运行
+pip install -e .
 
 ## Usage
 
-./main.py --cache_dir=/tmp/cache --data_source=rqdata
-
-./main.py --cache_dir=/tmp/cache --data_soruce=rqdata --txn_day=2021-08-01
+./main.py --cache_dir=/tmp/cache --data_soruce=rqdata --txn_day=2021-08-01 --strategy_cfg=double_low.json
 
 ./main.py --cache_dir=/tmp/cache --data_source=jisilu
 
 ./main.py --help
+
+./backtest.py --start_date='2018-01-01' --end_date='2021-08-31' --cache_dir="/tmp/cache" --strategy_cfg='[dlh]*.json'
 
 ## Example
 
@@ -72,8 +74,12 @@ Run pip install -e . in the library/ directory before running.
 
 ## TODO
 
-* 过滤接近强赎触发的转债（强赎数数数据不知道有没有），强赎公告发布会马上导致溢价的收敛。
-* 过滤的规模是否要放宽一些(5000w?)
+* 增加更多的策略作比较
+  * 盛唐风物的偏离策略
+  * 强赎博弈
+  * 回售博弈
+  * ...
+* 优化现有策略，考虑其他的因子，比如规模，评级等
 
 ## Change Log
 
@@ -130,3 +136,4 @@ Run pip install -e . in the library/ directory before running.
 * 多策略回测
 * 回测配置放置在json中，可定义过滤条件
 * 增加几个回测策略
+* 过滤接近强赎触发的转债，强赎公告发布会马上导致溢价的收敛。
