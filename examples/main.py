@@ -56,7 +56,6 @@ def main(argv):
         logging.info(cfg['comment'])
         s = getattr(strategy, cfg['scoring_fn'])
         df = s(df, df_date, cfg['config'], score_col, rank_col)
-        df.to_csv('test.csv')
         top = df[~df.filtered].iloc[FLAGS.top].at[rank_col]
         df = df.head(top)
         logging.info('\n%s' % df[[
