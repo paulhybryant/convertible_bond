@@ -5,6 +5,11 @@
     "factors": {
       "bond_price": 1
     },
+    "filters": {
+      "停牌": "{suspended}",
+      "成交量低": "{volume} < 100",
+      "成交额低": "{total_turnover} < 500000",
+    },
     "asc": true
   },
   "top": 20

@@ -5,6 +5,7 @@
     "factors": {
       "yield_to_maturity": 1
     },
+    "filters": {},
     "asc": false
   },
   "top": 20

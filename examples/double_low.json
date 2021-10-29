@@ -6,6 +6,13 @@
       "bond_price": 1,
       "conversion_premium": 100
     },
+    "filters": {
+      "停牌": "{suspended}",
+      "成交量低": "{volume} < 100",
+      "成交额低": "{total_turnover} < 500000",
+      "已公告强赎": "'{info_date}' <= '{today}'",
+      "临近到期日": "{days_to_maturity} <= 30"
+    },
     "asc": true
   },
   "top": 20

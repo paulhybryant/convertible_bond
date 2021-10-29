@@ -148,13 +148,13 @@ def fetch(txn_day, cache_dir=None, logger=None):
 
     df = populate_metrics(df_all_instruments, df_conversion_price,
                           df_latest_bond_price, df_latest_stock_price,
-                          df_call_info, df_indicators, df_suspended)
+                          df_call_info, df_indicators, df_suspended, txn_day)
     # 只返回可转债
     return df[df.bond_type == 'cb']
 
 
 def populate_metrics(all_instruments, conversion_price, bond_price,
-                     stock_price, call_info, indicators, suspended):
+                     stock_price, call_info, indicators, suspended, txn_day):
     # Add stock_price column
     stock_price = stock_price[['order_book_id',
                                'close']].rename(columns={
@@ -169,7 +169,12 @@ def populate_metrics(all_instruments, conversion_price, bond_price,
     ]].rename(columns={
         'close': 'bond_price'
     }).set_index('order_book_id')
-    df = df.join(bond_price)
+
+    df = df.join(bond_price).fillna({
+        'bond_price': 0,
+        'volume': 0,
+        'total_turnover': 0
+    })
 
     # Add conversion_price column
     conversion_price = conversion_price[['order_book_id', 'conversion_price'
@@ -177,13 +182,20 @@ def populate_metrics(all_instruments, conversion_price, bond_price,
     df = df.join(conversion_price)
 
     # Add info_date column
-    df = df.join(call_info.set_index('order_book_id')[['info_date']])
+    df = df.join(call_info.set_index('order_book_id')[['info_date']]).fillna(
+        {'info_date': '2030-01-01'})
 
     # Add columns from indicators
     df = df.join(indicators.set_index('order_book_id'))
 
     # Add suspended column
     df = df.join(suspended)
+
+    # Add days_to_maturity column
+    df['maturity_date'] = pd.to_datetime(df.maturity_date)
+    df['days_to_maturity'] = (df.maturity_date.dt.date -
+                              txn_day.date()).dt.days
+
     return df
 
 
