@@ -33,8 +33,8 @@ def init(context):
                          tradingday=1,
                          time_rule=market_open(minute=10))
     context.written = False
-    context.candidatesf = pathlib.Path(
-        context.run_dir).joinpath('%s.csv' % context.strategy_name)
+    context.candidatesf = pathlib.Path(context.run_dir).joinpath(
+        '%s.csv' % context.strategy_name)
 
 
 def rebalance(context, bar_dict):
@@ -45,7 +45,9 @@ def rebalance(context, bar_dict):
     score_col = 'weighted_score'
     rank_col = 'rank'
     s = getattr(strategy, context.strategy_config['scoring_fn'])
-    df = s(df, context.now, context.strategy_config['config'].convert_to_dict(), score_col, rank_col)
+    df = s(df, context.now,
+           context.strategy_config['config'].convert_to_dict(), score_col,
+           rank_col)
     df['date'] = context.now.date()
 
     positions = set()
@@ -117,6 +119,8 @@ def plot_results(results, savefile=None):
 
     title = 'Conbond Strateties Comparison'
     benchmark_portfolio = None
+    start_date = None
+    end_date = None
     plt.style.use('ggplot')
     img_width = 16
     img_height = 10
@@ -136,6 +140,8 @@ def plot_results(results, savefile=None):
 
         if benchmark_portfolio is None:
             benchmark_portfolio = result_dict.get('benchmark_portfolio')
+            start_date = result_dict.get('summary')['start_date']
+            end_date = result_dict.get('summary')['end_date']
             index = benchmark_portfolio.index
             portfolio_value = benchmark_portfolio.unit_net_value
             xs = portfolio_value.values
@@ -180,7 +186,8 @@ def plot_results(results, savefile=None):
         ]] = df[['max_drawdown', 'total_returns',
                  'annualized_returns']].applymap('{0:.2%}'.format)
     ax2 = plt.subplot(gs[0:2, :])
-    ax2.text(0, 1, 'Start Date: %s, End Date: %s' % (FLAGS.start_date, FLAGS.end_date))
+    ax2.set_title(title)
+    ax2.text(0, 1, 'Start Date: %s, End Date: %s' % (start_date, end_date))
     ax2.table(cellText=df.values, colLabels=df.columns, loc='center')
     ax2.axis('off')
     #  ax2.axis('tight')
