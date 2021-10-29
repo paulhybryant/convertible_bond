@@ -66,6 +66,10 @@ Run pip install -e . in the library/ directory before running.
 
 ./main.py --help
 
+## Example
+
+![Results of multiple strategies](/examples/results.png)
+
 ## TODO
 
 * 过滤接近强赎触发的转债（强赎数数数据不知道有没有），强赎公告发布会马上导致溢价的收敛。
@@ -120,3 +124,9 @@ Run pip install -e . in the library/ directory before running.
   * 2019-09-23 113534: 数据源问题，不需要修正
   * 2020-08-10 128012: 2020-04-29之后再无成交,价格不变但是溢价率一直降低，用成交过滤
   * 2021-01-18 113008: 临近到期赎回，过滤(30days)
+
+### 2021-10-29
+
+* 多策略回测
+* 回测配置放置在json中，可定义过滤条件
+* 增加几个回测策略
