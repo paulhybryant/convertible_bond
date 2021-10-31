@@ -32,9 +32,6 @@ def init(context):
     scheduler.run_weekly(rebalance,
                          tradingday=1,
                          time_rule=market_open(minute=10))
-    context.written = False
-    context.candidatesf = pathlib.Path(context.run_dir).joinpath(
-        '%s.csv' % context.strategy_name)
 
 
 def rebalance(context, bar_dict):
@@ -63,17 +60,18 @@ def rebalance(context, bar_dict):
     top = context.strategy_config['top']
     head = df[~df.filtered].iloc[top - len(suspended)].at[rank_col]
     df = df.head(head)
-    if context.written:
+    if hasattr(context, 'candidatesf'):
         df[[
             'date', 'symbol', 'bond_price', 'conversion_premium', score_col,
             rank_col, 'filtered', 'filtered_reason'
         ]].to_csv(context.candidatesf, mode='a', header=False, index=True)
     else:
+        context.candidatesf = pathlib.Path(context.run_dir).joinpath(
+        '%s.csv' % context.strategy_name)
         df[[
             'date', 'symbol', 'bond_price', 'conversion_premium', score_col,
             rank_col, 'filtered', 'filtered_reason'
         ]].to_csv(context.candidatesf, mode='w', header=True, index=True)
-        context.written = True
 
     candidates = set(df[~df.filtered].index.values.tolist())
     # 平仓

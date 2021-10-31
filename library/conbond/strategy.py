@@ -6,13 +6,16 @@ import logging
 
 def multi_factors_rank(df, txn_day, config, score_col, rank_col):
     factors = config['factors'].keys()
+    weights = config['factors'].values()
     df = df.reset_index()
-    df[score_col] = 0
+    score_cols = []
     for factor in factors:
+        col = '%s_rank' % factor
+        score_cols.append(col)
         df = df.sort_values(factor).reset_index(drop=True)
-        df['%s_rank' % factor] = df.index.to_series()
-        df[score_col] += df.index.to_series()
+        df[col] = df.index.to_series()
         df.reset_index(drop=True, inplace=True)
+    df[score_col] = (df[score_cols] * weights).sum(axis=1)
     return post_scoring(df, txn_day, config, score_col, rank_col)
 
 
@@ -89,6 +92,7 @@ def plot_results(results, savefile=None):
         summary = result_dict['summary']
 
         if benchmark_portfolio is None:
+            benchmark = summary['benchmark']
             benchmark_portfolio = result_dict.get('benchmark_portfolio')
             start_date = result_dict.get('summary')['start_date']
             end_date = result_dict.get('summary')['end_date']
@@ -97,10 +101,10 @@ def plot_results(results, savefile=None):
             xs = portfolio_value.values
             rt = benchmark_portfolio.unit_net_value.values
             ax.plot(benchmark_portfolio['unit_net_value'] - 1.0,
-                    label='HS300',
+                    label=benchmark,
                     alpha=1,
                     linewidth=2)
-            table_data['HS300'] = [
+            table_data[benchmark] = [
                 summary['benchmark_sharpe'], summary['benchmark_max_drawdown'],
                 summary['benchmark_total_returns'],
                 summary['benchmark_annualized_returns']

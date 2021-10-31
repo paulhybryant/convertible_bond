@@ -3,7 +3,7 @@
   "scoring_fn": "multi_factors_weighted_linear",
   "config": {
     "factors": {
-      "conversion_premium": 100
+      "conversion_premium": 1
     },
     "filters": {
       "停牌": "{suspended}",

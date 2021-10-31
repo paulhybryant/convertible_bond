@@ -1,24 +1,28 @@
-diff --git a/rqalpha/main.py b/rqalpha/main.py
-index 8312c6fc..c8681372 100644
---- a/rqalpha/main.py
-+++ b/rqalpha/main.py
-@@ -194,10 +194,6 @@ def run(config, source_code=None, user_funcs=None):
-         if persist_helper:
-             with LogCapture(user_log) as log_capture:
-                 user_strategy.init()
--        else:
--            user_strategy.init()
--
--        if persist_helper:
-             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
-             restored_obj_state = persist_helper.restore(None)
-             check_key = ["global_vars", "user_context", "executor", "universe"]
-@@ -210,6 +206,8 @@ def run(config, source_code=None, user_funcs=None):
-             else:
-                 system_log.debug(_('system restored'))
-             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
-+        else:
-+            user_strategy.init()
+diff --git a/rqalpha/mod/rqalpha_mod_sys_analyser/mod.py b/rqalpha/mod/rqalpha_mod_sys_analyser/mod.py
+index 44430f28..dcc5a024 100644
+--- a/rqalpha/mod/rqalpha_mod_sys_analyser/mod.py
++++ b/rqalpha/mod/rqalpha_mod_sys_analyser/mod.py
+@@ -285,6 +285,7 @@ class AnalyserMod(AbstractMod):
  
-         init_succeed = True
- 
+         summary = {
+             'strategy_name': strategy_name,
++            'benchmark': self._env.config.base.benchmark,
+             'start_date': self._env.config.base.start_date.strftime('%Y-%m-%d'),
+             'end_date': self._env.config.base.end_date.strftime('%Y-%m-%d'),
+             'strategy_file': self._env.config.base.strategy_file,
+@@ -301,6 +302,7 @@ class AnalyserMod(AbstractMod):
+             'alpha': self._safe_convert(risk.alpha, 3),
+             'beta': self._safe_convert(risk.beta, 3),
+             'sharpe': self._safe_convert(risk.sharpe, 3),
++            'benchmark_sharpe': self._safe_convert(risk.benchmark_sharpe, 3),
+             'excess_sharpe': self._safe_convert(risk.excess_sharpe, 3),
+             'information_ratio': self._safe_convert(risk.information_ratio, 3),
+             'downside_risk': self._safe_convert(risk.annual_downside_risk, 3),
+@@ -310,6 +312,7 @@ class AnalyserMod(AbstractMod):
+             'excess_volatility': self._safe_convert(risk.excess_volatility, 3),
+             'excess_annual_volatility': self._safe_convert(risk.excess_annual_volatility, 3),
+             'max_drawdown': self._safe_convert(risk.max_drawdown, 3),
++            'benchmark_max_drawdown': self._safe_convert(risk.max_drawdown, 3),
+             'excess_max_drawdown': self._safe_convert(risk.excess_max_drawdown),
+             'excess_returns': self._safe_convert(risk.excess_return_rate, 6),
+             'excess_annual_returns': self._safe_convert(risk.excess_annual_return, 6)

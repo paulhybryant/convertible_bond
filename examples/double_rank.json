@@ -3,8 +3,8 @@
   "scoring_fn": "multi_factors_rank",
   "config": {
     "factors": {
-      "bond_price": 1,
-      "conversion_premium": 1
+      "bond_price": 0.5,
+      "conversion_premium": 0.5
     },
     "filters": {
       "停牌": "{suspended}",
