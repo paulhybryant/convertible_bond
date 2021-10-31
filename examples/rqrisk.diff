@@ -1,0 +1,57 @@
+diff --git a/rqrisk/risk.py b/rqrisk/risk.py
+index a670392..d9884af 100644
+--- a/rqrisk/risk.py
++++ b/rqrisk/risk.py
+@@ -59,13 +59,16 @@ class Risk(object):
+         self._alpha = None
+         self._beta = None
+         self._avg_excess_return = np.mean(daily_returns) - self._daily_risk_free_rate
++        self._benchmark_avg_excess_return = np.mean(benchmark_daily_returns) - self._daily_risk_free_rate
+         self._sharpe = None
++        self._benchmark_sharpe = None
+         self._return = np.expm1(np.log1p(daily_returns).sum())
+         self._annual_return = (1 + self._return) ** (self._annual_factor / self._period_count) - 1
+         self._benchmark_return = np.expm1(np.log1p(self._benchmark).sum())
+         self._benchmark_annual_return = (1+self._benchmark_return) ** \
+                                         (self._annual_factor / self._period_count) - 1
+         self._max_drawdown = None
++        self._benchmark_max_drawdown = None
+         self._volatility = None
+         self._annual_volatility = None
+         self._benchmark_volatility = None
+@@ -206,6 +209,17 @@ class Risk(object):
+         self._max_drawdown = abs(((df_cum - max_return) / max_return).min())
+         return self._max_drawdown
+ 
++    @property
++    def benchmark_max_drawdown(self):
++        if self._benchmark_max_drawdown is not None:
++            return self._benchmark_max_drawdown
++
++        benchmark = [1] + list(self._benchmark)
++        df_cum = np.exp(np.log1p(benchmark).cumsum())
++        max_return = np.maximum.accumulate(df_cum)
++        self._benchmark_max_drawdown = abs(((df_cum - max_return) / max_return).min())
++        return self._benchmark_max_drawdown
++
+     def _calc_tracking_error(self):
+         if len(self._portfolio) < 2:
+             self._tracking_error = 0.
+@@ -263,6 +277,17 @@ class Risk(object):
+         self._sharpe = np.sqrt(self._annual_factor) * self._avg_excess_return / std_excess_return
+         return self._sharpe
+ 
++    @property
++    def benchmark_sharpe(self):
++        if self._benchmark_sharpe is not None:
++            return self._benchmark_sharpe
++
++        std_excess_return = np.sqrt((1 / (len(self._benchmark) - 1)) * np.sum(
++            (self._benchmark - self._daily_risk_free_rate - self._benchmark_avg_excess_return) ** 2
++        ))
++        self._benchmark_sharpe = np.sqrt(self._annual_factor) * self._benchmark_avg_excess_return / std_excess_return
++        return self._benchmark_sharpe
++
+     @property
+     def excess_sharpe(self):
+         if self._excess_sharpe is not None:

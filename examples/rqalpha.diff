@@ -1,0 +1,24 @@
+diff --git a/rqalpha/main.py b/rqalpha/main.py
+index 8312c6fc..c8681372 100644
+--- a/rqalpha/main.py
++++ b/rqalpha/main.py
+@@ -194,10 +194,6 @@ def run(config, source_code=None, user_funcs=None):
+         if persist_helper:
+             with LogCapture(user_log) as log_capture:
+                 user_strategy.init()
+-        else:
+-            user_strategy.init()
+-
+-        if persist_helper:
+             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
+             restored_obj_state = persist_helper.restore(None)
+             check_key = ["global_vars", "user_context", "executor", "universe"]
+@@ -210,6 +206,8 @@ def run(config, source_code=None, user_funcs=None):
+             else:
+                 system_log.debug(_('system restored'))
+             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
++        else:
++            user_strategy.init()
+ 
+         init_succeed = True
+ 
