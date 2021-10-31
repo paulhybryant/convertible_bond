@@ -11,7 +11,6 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('infile', None, 'instrument.pk')
 flags.DEFINE_string('outfile', None, 'instrument_with_convertible.pk')
-flags.DEFINE_string('auth_file', 'auth.json', 'Auth file')
 
 
 def main(argv):
@@ -19,7 +18,7 @@ def main(argv):
     password = None
 
     data_source = 'rqdata'
-    auth_file = pathlib.Path('auth.json')
+    auth_file = pathlib.Path('.auth.json')
     if not auth_file.exists():
         logging.fatal('auth.json is missing, see README.md')
     auth = json.load(auth_file.open('r'))

@@ -71,6 +71,7 @@ def plot_results(results, savefile=None):
         logging.warn('Missing Chinese fonts. Fallback to English.')
 
     title = 'Conbond Strateties Comparison'
+    table_size = 2 if len(results) <= 6 else 3
     benchmark_portfolio = None
     start_date = None
     end_date = None
@@ -79,7 +80,7 @@ def plot_results(results, savefile=None):
     img_height = 10
     fig = plt.figure(title, figsize=(img_width, img_height))
     gs = gridspec.GridSpec(img_height, img_width)
-    ax = plt.subplot(gs[2:img_height, :])
+    ax = plt.subplot(gs[table_size:img_height, :])
     ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
@@ -132,7 +133,7 @@ def plot_results(results, savefile=None):
     df[['max_drawdown', 'total_returns', 'annualized_returns'
         ]] = df[['max_drawdown', 'total_returns',
                  'annualized_returns']].applymap('{0:.2%}'.format)
-    ax2 = plt.subplot(gs[0:2, :])
+    ax2 = plt.subplot(gs[0:table_size, :])
     ax2.set_title(title)
     ax2.text(0, 1, 'Start Date: %s, End Date: %s' % (start_date, end_date))
     ax2.table(cellText=df.values, colLabels=df.columns, loc='center')

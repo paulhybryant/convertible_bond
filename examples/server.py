@@ -16,7 +16,7 @@ AUTH=None
 def jsl():
     global AUTH
     if not AUTH:
-        auth_file = pathlib.Path('auth.json')
+        auth_file = pathlib.Path('.auth.json')
         AUTH = json.load(auth_file.open('r'))
     username = AUTH['jisilu']['username']
     password = AUTH['jisilu']['password']

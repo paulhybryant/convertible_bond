@@ -22,6 +22,7 @@ flags.DEFINE_string('start_date', None, 'Backtest start date')
 flags.mark_flag_as_required('start_date')
 flags.DEFINE_string('end_date', None, 'Backtest end date')
 flags.mark_flag_as_required('end_date')
+flags.DEFINE_string('results', 'results.png', 'results plot file')
 
 
 # A few note for this to work:
@@ -185,7 +186,7 @@ def main(argv):
         k, r = backtest(sc, run_dir, FLAGS.cache_dir)
         results[k] = r['sys_analyser']
     print('Run dir: {0}, log: {0}/debug.log'.format(run_dir))
-    strategy.plot_results(results, savefile='results.png')
+    strategy.plot_results(results, savefile=FLAGS.results)
 
 
 if __name__ == '__main__':

@@ -30,14 +30,14 @@
   * 每一个转债的历史数据有，需要爬
   * 适用于手动轮动，生成基于运行当日数据的标的和操作。
 
-要使用聚宽/米筐的数据，需要申请使用，并将用户名密码放在auth.json里。
-要使用集思录的数据，需要将用户名和密码放在auth.json里。否则集思录无法获得完整的转债数据。
+要使用聚宽/米筐的数据，需要申请使用，并将用户名密码放在'.auth.json'里。
+要使用集思录的数据，需要将用户名和密码放在'.auth.json'里。否则集思录无法获得完整的转债数据。
 集思录现在是直接用python的requests获取，比较麻烦。也可以考虑Selenium的方案。
 
 付费的话，直接用米筐或者rqalpha-plus，交易用vnpy或者easytrader（都没试过）
 免费的话，最好的组合是用米筐的数据（或者聚宽的可能也可以），用rqalpha + 自己扩展的数据源进行回测。至少对于可转债是可以work的。
 
-auth.json的格式如下：
+.auth.json的格式如下：
 {
   "rqdata": {
     "username": "license",
@@ -53,7 +53,7 @@ auth.json的格式如下：
   },
 }
 
-持仓信息默认放在positions.json里面
+持仓信息默认放在'.positions.json'里面
 可以自己些计算策略的函数，也可以用library/里的现成的。
 要安装library/中的库，在library/目录下运行
 pip install -e .

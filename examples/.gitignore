@@ -1,4 +1,4 @@
-auth.json
-positions.json
+.auth.json
+.positions.json
 cache
 logs
