@@ -5,12 +5,13 @@ from attrdict import AttrDict
 from conbond import ricequant, strategy
 from datetime import datetime
 from rqalpha import run_func
-from rqalpha.api import *
+from rqalpha.api import logger
 import glob
 import json
-import logging
 import pandas as pd
 import pathlib
+from rqalpha.utils.logger import user_log
+from logbook import Logger, FileHandler
 
 FLAGS = flags.FLAGS
 
@@ -23,6 +24,7 @@ flags.mark_flag_as_required('start_date')
 flags.DEFINE_string('end_date', None, 'Backtest end date')
 flags.mark_flag_as_required('end_date')
 flags.DEFINE_string('results', 'results.png', 'results plot file')
+flags.DEFINE_string('run_dir', None, 'Run directory')
 
 
 # A few note for this to work:
@@ -39,7 +41,7 @@ def rebalance(context, bar_dict):
     logger.info('Rebalance date: %s' % context.now)
     df = ricequant.fetch(context.now,
                          cache_dir=context.cache_dir,
-                         logger=logging)
+                         logger=logger)
     score_col = 'weighted_score'
     rank_col = 'rank'
     s = getattr(strategy, context.strategy_config['scoring_fn'])
@@ -54,7 +56,7 @@ def rebalance(context, bar_dict):
         inst = df.loc[p.order_book_id]
         if inst.at['suspended']:
             suspended.add(p.order_book_id)
-            logging.info('持仓停牌: %s' % p.order_book_id)
+            context.logf.info('持仓停牌: %s' % p.order_book_id)
         else:
             positions.add(p.order_book_id)
 
@@ -79,24 +81,20 @@ def rebalance(context, bar_dict):
     for order_book_id in (positions - candidates):
         order = order_target_percent(order_book_id, 0)
         if order is not None and order.status != ORDER_STATUS.FILLED:
-            logging.info('Order error: %s' % order)
+            context.logf.info('Order error: %s' % order)
     # 调仓
     for order_book_id in (positions & candidates):
         order = order_target_percent(order_book_id, 1 / top)
         if order is not None and order.status != ORDER_STATUS.FILLED:
-            logging.info('Order error: %s' % order)
+            context.logf.info('Order error: %s' % order)
     # 开仓
     for order_book_id in (candidates - positions):
         order = order_target_percent(order_book_id, 1 / top)
         if order is not None and order.status != ORDER_STATUS.FILLED:
-            logging.info('Order error: %s' % order)
+            context.logf.info('Order error: %s' % order)
 
 
-def backtest(sc, run_dir, cache_dir):
-    p = pathlib.Path(sc)
-    print(p)
-    logging.info('Strategy name: %s' % p.stem)
-    cfg = json.load(p.open())
+def backtest(cfg, run_dir, cache_dir, logger):
     config = {
         'base': {
             'start_date': FLAGS.start_date,
@@ -109,19 +107,20 @@ def backtest(sc, run_dir, cache_dir):
         },
         'extra': {
             'context_vars': {
-                'run_dir': run_dir.resolve(),
+                'run_dir': run_dir,
                 'cache_dir': cache_dir,
                 'strategy_config': cfg,
-                'strategy_name': p.stem,
+                'strategy_name': cfg['name'],
+                'logf': logger,
             },
             'log_level': 'error',
         },
         'mod': {
             'sys_analyser': {
                 'enabled': True,
-                'output_file': '%s/%s.pkl' % (run_dir, p.stem),
+                'output_file': '%s/%s.pkl' % (run_dir, cfg['name']),
                 'plot': False,
-                'plot_save_file': '%s/%s.png' % (run_dir, p.stem),
+                'plot_save_file': '%s/%s.png' % (run_dir, cfg['name']),
             },
             'sys_simulation': {
                 'enabled': True,
@@ -168,24 +167,34 @@ def backtest(sc, run_dir, cache_dir):
             }
         }
     }
-    return p.stem, run_func(init=init, config=config)
+    return run_func(init=init, config=config)
 
 
 def main(argv):
-    run_dir = pathlib.Path('logs').joinpath(
-        datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
-    print('Run dir: {0}, log: {0}/debug.log'.format(run_dir))
-    run_dir.mkdir(parents=True, exist_ok=False)
-    logging.basicConfig(level=logging.INFO,
-                        filename='%s/debug.log' % run_dir,
-                        filemode='w',
-                        force=True)
-
+    if FLAGS.run_dir:
+        run_dir = pathlib.Path(FLAGS.run_dir).resolve()
+    else:
+        run_dir = pathlib.Path('logs').joinpath(
+            datetime.now().strftime('%Y-%m-%d-%H-%M-%S')).resolve()
+        run_dir.mkdir(parents=True, exist_ok=False)
+    print('Run dir: {0}'.format(run_dir))
+    logf = Logger('backtest')
+    fh = FileHandler('%s/debug.log' % run_dir, level='DEBUG', bubble=True)
+    fh.push_application()
     results = {}
     for sc in glob.glob(FLAGS.strategy_cfg):
-        k, r = backtest(sc, run_dir, FLAGS.cache_dir)
-        results[k] = r['sys_analyser']
-    print('Run dir: {0}, log: {0}/debug.log'.format(run_dir))
+        p = pathlib.Path(sc)
+        cfg = json.load(p.open())
+        cfg['name'] = p.stem
+        r = run_dir.joinpath('%s.pkl' % p.stem)
+        if r.exists():
+            print('Result for %s exists, skipping' % sc)
+            results[cfg['name']] = pd.read_pickle(r)
+        else:
+            print('Strategy name: %s' % cfg['name'])
+            r = backtest(cfg, run_dir, FLAGS.cache_dir, logf)
+            results[cfg['name']] = r['sys_analyser']
+    print('Run dir: {0}'.format(run_dir))
     strategy.plot_results(results, savefile=FLAGS.results)
 
 
