@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 import pathlib
 import jqdatasdk as jqdata
 

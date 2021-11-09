@@ -3,7 +3,7 @@
 import json
 import pathlib
 from absl import app, flags, logging
-from datetime import date, timedelta
+from datetime import date
 from conbond import ricequant
 import pandas as pd
 from tqdm import tqdm
