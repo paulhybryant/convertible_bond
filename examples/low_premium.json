@@ -13,5 +13,6 @@
     },
     "asc": true
   },
+  "force": true,
   "top": 20
 }

@@ -12,5 +12,6 @@
     },
     "asc": true
   },
+  "force": false,
   "top": 20
 }

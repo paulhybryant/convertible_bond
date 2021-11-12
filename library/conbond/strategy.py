@@ -46,7 +46,7 @@ def post_scoring(df, txn_day, config, score_col, rank_col):
     return df.set_index('order_book_id')
 
 
-def plot_results(results, savefile=None):
+def plot_results(backtest_time, results, savefile=None):
     from matplotlib import rcParams, gridspec, ticker, image as mpimg, pyplot as plt
     from matplotlib.font_manager import findfont, FontProperties
     import numpy as np
@@ -135,7 +135,7 @@ def plot_results(results, savefile=None):
                  'annualized_returns']].applymap('{0:.2%}'.format)
     ax2 = plt.subplot(gs[0:table_size, :])
     ax2.set_title(title)
-    ax2.text(0, 1, 'Start Date: %s, End Date: %s' % (start_date, end_date))
+    ax2.text(0, 2, 'Start Date: %s, End Date: %s, Backtest Time: %s' % (start_date, end_date, backtest_time))
     ax2.table(cellText=df.values, colLabels=df.columns, loc='center')
     ax2.axis('off')
 

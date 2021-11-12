@@ -32,9 +32,8 @@ flags.DEFINE_string('run_dir', None, 'Run directory')
 # for the backtest to work, we are making the convertible bond as common stock
 # The instruments.pk file will need to be updated to include all the bonds' order_book_id
 def init(context):
-    scheduler.run_weekly(rebalance,
-                         tradingday=1,
-                         time_rule=market_open(minute=10))
+    #  scheduler.run_weekly(rebalance, tradingday=1)
+    scheduler.run_daily(rebalance)
 
 
 def rebalance(context, bar_dict):
@@ -70,7 +69,7 @@ def rebalance(context, bar_dict):
         ]].to_csv(context.candidatesf, mode='a', header=False, index=True)
     else:
         context.candidatesf = pathlib.Path(context.run_dir).joinpath(
-        '%s.csv' % context.strategy_name)
+            '%s.csv' % context.strategy_name)
         df[[
             'date', 'symbol', 'bond_price', 'conversion_premium', score_col,
             rank_col, 'filtered', 'filtered_reason'
@@ -158,7 +157,7 @@ def backtest(cfg, run_dir, cache_dir, logger):
                 'start_date':
                 '2018-01-02',
                 'end_date':
-                '2021-09-24',
+                '2021-11-10',
                 'data_path':
                 pathlib.Path(__file__).parent.joinpath(cache_dir, 'rqdata',
                                                        'combined.csv'),
@@ -171,11 +170,12 @@ def backtest(cfg, run_dir, cache_dir, logger):
 
 
 def main(argv):
+    backtest_time = datetime.now()
     if FLAGS.run_dir:
         run_dir = pathlib.Path(FLAGS.run_dir).resolve()
     else:
         run_dir = pathlib.Path('logs').joinpath(
-            datetime.now().strftime('%Y-%m-%d-%H-%M-%S')).resolve()
+            backtest_time.strftime('%Y-%m-%d-%H-%M-%S')).resolve()
         run_dir.mkdir(parents=True, exist_ok=False)
     print('Run dir: {0}'.format(run_dir))
     logf = Logger('backtest')
@@ -187,7 +187,7 @@ def main(argv):
         cfg = json.load(p.open())
         cfg['name'] = p.stem
         r = run_dir.joinpath('%s.pkl' % p.stem)
-        if r.exists():
+        if r.exists() and not cfg['force']:
             print('Result for %s exists, skipping' % sc)
             results[cfg['name']] = pd.read_pickle(r)
         else:
@@ -195,7 +195,7 @@ def main(argv):
             r = backtest(cfg, run_dir, FLAGS.cache_dir, logf)
             results[cfg['name']] = r['sys_analyser']
     print('Run dir: {0}'.format(run_dir))
-    strategy.plot_results(results, savefile=FLAGS.results)
+    strategy.plot_results(backtest_time, results, savefile=FLAGS.results)
 
 
 if __name__ == '__main__':
