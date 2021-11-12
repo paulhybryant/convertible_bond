@@ -32,8 +32,8 @@ flags.DEFINE_string('run_dir', None, 'Run directory')
 # for the backtest to work, we are making the convertible bond as common stock
 # The instruments.pk file will need to be updated to include all the bonds' order_book_id
 def init(context):
-    #  scheduler.run_weekly(rebalance, tradingday=1)
-    scheduler.run_daily(rebalance)
+    scheduler.run_weekly(rebalance, tradingday=1)
+    #  scheduler.run_daily(rebalance)
 
 
 def rebalance(context, bar_dict):
