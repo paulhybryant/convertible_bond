@@ -154,15 +154,9 @@ def backtest(cfg, run_dir, cache_dir, logger):
                 'lib':
                 'rqalpha_mod_local_source',
                 # 其他配置参数
-                'start_date':
-                '2018-01-02',
-                'end_date':
-                '2021-11-10',
                 'data_path':
                 pathlib.Path(__file__).parent.joinpath(cache_dir, 'rqdata',
                                                        'combined.csv'),
-                'data_format':
-                'csv',
             }
         }
     }
