@@ -1,4 +1,7 @@
 # convertible_bond
+
+DEPRECATED! github访问不方便。感兴趣的可以移步https://gitee.com/paulhybryant/quant
+
 可转债策略及量化回测
 
 几个平台的粗略比较：
